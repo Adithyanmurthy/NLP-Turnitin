@@ -246,7 +246,8 @@ def process_sts(raw_path: Path) -> list[dict]:
 
 def process_wikisplit(raw_path: Path) -> list[dict]:
     """Process WikiSplit into paraphrase format.
-    Columns: complex_sentence, simple_sentences (note: plural).
+    Actual columns: complex_sentence, simple_sentence_1, simple_sentence_2.
+    We pair complex_sentence with simple_sentence_1 (the primary simplification).
     Capped at 300K to avoid OOM."""
     MAX_RECORDS = 300_000
     records = []
@@ -255,11 +256,17 @@ def process_wikisplit(raw_path: Path) -> list[dict]:
         for split_name in ds:
             if len(records) >= MAX_RECORDS:
                 break
-            if hasattr(ds[split_name], 'column_names'):
-                print(f"  [DEBUG] WikiSplit {split_name} columns: {ds[split_name].column_names}")
+            cols = ds[split_name].column_names if hasattr(ds[split_name], 'column_names') else []
+            print(f"  [DEBUG] WikiSplit {split_name} columns: {cols}")
             for row in tqdm(ds[split_name], desc=f"WikiSplit/{split_name}"):
                 inp = clean_text(row.get("complex_sentence", row.get("source", "")))
-                out = clean_text(row.get("simple_sentences", row.get("simple_sentence", row.get("target", ""))))
+                # Try all known column name variants
+                out = ""
+                for col in ["simple_sentence_1", "simple_sentences", "simple_sentence", "target"]:
+                    val = row.get(col, "")
+                    if val:
+                        out = clean_text(val)
+                        break
                 if is_valid_text(inp, min_len=10) and is_valid_text(out, min_len=10):
                     records.append({"input": inp, "output": out})
                     if len(records) >= MAX_RECORDS:
@@ -458,29 +465,59 @@ def process_webis_crowd_paraphrase(raw_path: Path) -> list[dict]:
 
 def process_paranmt(raw_path: Path) -> list[dict]:
     """Process chatgpt-paraphrases (humarin/chatgpt-paraphrases) into paraphrase format.
-    Columns: text (original), paraphrases (list of strings), category, source.
-    Capped at 300K to avoid OOM."""
+    Capped at 300K to avoid OOM. Auto-detects column names."""
     records = []
     max_records = 300_000
     # First try HuggingFace Arrow format (auto-downloaded)
     try:
         ds = load_from_disk(str(raw_path))
         for split_name in ds:
+            cols = ds[split_name].column_names if hasattr(ds[split_name], 'column_names') else []
+            print(f"  [DEBUG] ParaNMT {split_name} columns: {cols}")
             for row in tqdm(ds[split_name], desc=f"ParaNMT/{split_name}"):
-                original = clean_text(row.get("text", ""))
-                paraphrases = row.get("paraphrases", [])
+                # Try multiple column name patterns
+                original = ""
+                for col in ["text", "source", "input", "sentence", "original"]:
+                    val = row.get(col, "")
+                    if val:
+                        original = clean_text(val)
+                        break
                 if not is_valid_text(original, min_len=10):
                     continue
-                # Each paraphrase paired with the original
+
+                # Try to find paraphrases (could be a list or a single string)
+                paraphrases = []
+                for col in ["paraphrases", "paraphrase", "target", "output", "generation"]:
+                    val = row.get(col, None)
+                    if val is not None:
+                        if isinstance(val, list):
+                            paraphrases = val
+                        elif isinstance(val, str) and val:
+                            paraphrases = [val]
+                        break
+
+                # If no known paraphrase column, try all remaining string columns
+                if not paraphrases:
+                    for col in cols:
+                        if col in ["text", "source", "input", "sentence", "original"]:
+                            continue
+                        val = row.get(col, None)
+                        if isinstance(val, str) and len(val) > 10:
+                            paraphrases = [val]
+                            break
+                        elif isinstance(val, list) and val and isinstance(val[0], str):
+                            paraphrases = val
+                            break
+
                 for para in paraphrases:
-                    out = clean_text(para)
+                    out = clean_text(para) if isinstance(para, str) else ""
                     if is_valid_text(out, min_len=10):
                         records.append({"input": original, "output": out})
                         if len(records) >= max_records:
                             return records
         return records
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] ParaNMT Arrow loading error: {e}")
     # Fallback: tab-separated text files (old ParaNMT format)
     for f in raw_path.rglob("*.txt"):
         try:
