@@ -443,6 +443,23 @@ def _download_hf(name, info, save_path):
             hf_name,
             data_files={"train": "train.jsonl", "test": "test.jsonl"},
         )
+    elif name == "hc3":
+        # HC3 loading script is broken — load the "all" subset from parquet
+        try:
+            ds = load_dataset(hf_name, "all", revision="refs/convert/parquet")
+        except Exception:
+            # Fallback: try loading parquet files directly
+            ds = load_dataset(hf_name, "all", trust_remote_code=True)
+    elif name == "bea_2019_gec":
+        # wi_locness loading script is broken — try parquet, then trust_remote_code
+        try:
+            ds = load_dataset(hf_name, revision="refs/convert/parquet")
+        except Exception:
+            try:
+                ds = load_dataset(hf_name, trust_remote_code=True)
+            except Exception:
+                # Last resort: load specific subset
+                ds = load_dataset(hf_name, "wi", trust_remote_code=True)
     elif use_parquet:
         # Datasets whose loading scripts are no longer supported —
         # load from the auto-converted parquet files on refs/convert/parquet
