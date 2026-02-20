@@ -28,7 +28,7 @@ def main():
     raw_train = loader.load_combined(
         dataset_names=cfg["datasets"],
         split="train",
-        max_per_dataset=500_000,
+        max_per_dataset=20_000,  # Cap per dataset — keeps training ~2-3h per model
     )
     # Keep only long texts (>2000 chars ≈ >512 tokens) for Longformer's advantage
     raw_train = [r for r in raw_train if len(r.get("text", "")) > 2000]
@@ -42,7 +42,7 @@ def main():
     raw_val = loader.load_combined(
         dataset_names=cfg["datasets"],
         split="val",
-        max_per_dataset=50_000,
+        max_per_dataset=5_000,
     )
     raw_val = [r for r in raw_val if len(r.get("text", "")) > 2000]
     print(f"  Filtered to {len(raw_val):,} long val documents")

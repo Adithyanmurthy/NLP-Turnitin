@@ -32,7 +32,7 @@ def main():
         split="train",
         tokenizer_name=model_name,
         max_length=cfg["max_length"],
-        max_per_dataset=500_000,  # Cap per dataset to balance
+        max_per_dataset=20_000,  # Cap per dataset — keeps training ~2-3h per model
     )
 
     print("Loading validation data...")
@@ -41,7 +41,7 @@ def main():
         split="val",
         tokenizer_name=model_name,
         max_length=cfg["max_length"],
-        max_per_dataset=50_000,
+        max_per_dataset=5_000,
     )
 
     train_dl = TorchDataLoader(
