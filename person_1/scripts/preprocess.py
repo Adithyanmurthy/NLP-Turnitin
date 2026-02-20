@@ -7,6 +7,7 @@ Unified formats:
   - Paraphrase:     {"input": "...", "output": "..."}
   - Similarity:     {"text_a": "...", "text_b": "...", "score": 0.0-1.0}
 """
+from __future__ import annotations
 
 import sys
 import os
