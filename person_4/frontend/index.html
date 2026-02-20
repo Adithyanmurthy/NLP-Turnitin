@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Integrity Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Content Integrity & Authorship Intelligence Platform</h1>
+            <p class="subtitle">AI Detection • Plagiarism Check • Humanization • Deplagiarization</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <h2>Input</h2>
+
+                <!-- File Upload -->
+                <div class="file-upload-area" id="fileUploadArea">
+                    <label for="fileInput" class="file-upload-label">
+                        <span class="file-icon">📁</span>
+                        <span>Drop a file here or click to upload</span>
+                        <span class="file-formats">Supports: TXT, PDF, DOCX, HTML, MD</span>
+                    </label>
+                    <input type="file" id="fileInput" accept=".txt,.pdf,.docx,.doc,.html,.htm,.md,.rtf" style="display:none">
+                    <div id="fileInfo" class="file-info" style="display:none;">
+                        <span id="fileName"></span>
+                        <button id="removeFile" class="btn btn-small btn-danger">✕ Remove</button>
+                    </div>
+                </div>
+
+                <div class="or-divider"><span>OR</span></div>
+
+                <textarea 
+                    id="inputText" 
+                    placeholder="Paste your text here for analysis..."
+                    rows="12"
+                    aria-label="Input text for analysis"
+                ></textarea>
+                
+                <div class="char-count">
+                    <span id="charCount">0</span> characters
+                </div>
+
+                <!-- Analysis Options -->
+                <div class="options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="checkAI" checked>
+                        <span>AI Detection</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="checkPlagiarism" checked>
+                        <span>Plagiarism Check</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="humanize">
+                        <span>Humanize Text</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="deplagiarize">
+                        <span>Deplagiarize Text</span>
+                    </label>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button id="analyzeBtn" class="btn btn-primary">
+                        <span class="btn-text">Analyze</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner"></span> Processing...
+                        </span>
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h2>Analysis Results</h2>
+                
+                <!-- AI Detection Results -->
+                <div class="result-card" id="aiResults" style="display: none;">
+                    <h3>🤖 AI Detection</h3>
+                    <div class="score-display">
+                        <div class="score-bar-container">
+                            <div class="score-bar" id="aiScoreBar"></div>
+                        </div>
+                        <div class="score-text">
+                            <span id="aiScore">0%</span>
+                            <span id="aiLabel" class="label"></span>
+                        </div>
+                    </div>
+                    <div class="confidence">
+                        Confidence: <span id="aiConfidence">0%</span>
+                    </div>
+                </div>
+
+                <!-- Plagiarism Results -->
+                <div class="result-card" id="plagiarismResults" style="display: none;">
+                    <h3>📄 Plagiarism Check</h3>
+                    <div class="score-display">
+                        <div class="score-bar-container">
+                            <div class="score-bar plagiarism" id="plagScoreBar"></div>
+                        </div>
+                        <div class="score-text">
+                            <span id="plagScore">0%</span> matched content
+                        </div>
+                    </div>
+                    <div class="matches-info">
+                        <span id="matchCount">0</span> sources found
+                    </div>
+                    <div id="matchesList" class="matches-list"></div>
+                </div>
+
+                <!-- Humanization Results -->
+                <div class="result-card" id="humanizationResults" style="display: none;">
+                    <h3>✨ Humanization</h3>
+                    <div class="humanization-stats">
+                        <div class="stat">
+                            <span class="stat-label">AI Before:</span>
+                            <span id="humanBefore" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">AI After:</span>
+                            <span id="humanAfter" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Iterations:</span>
+                            <span id="humanIterations" class="stat-value">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Model:</span>
+                            <span id="humanModel" class="stat-value">—</span>
+                        </div>
+                    </div>
+                    <div class="humanized-text">
+                        <h4>Humanized Output:</h4>
+                        <div id="humanizedOutput" class="output-text"></div>
+                        <button id="copyHumanBtn" class="btn btn-small">Copy to Clipboard</button>
+                    </div>
+                </div>
+
+                <!-- Deplagiarization Results -->
+                <div class="result-card" id="deplagResults" style="display: none;">
+                    <h3>🔄 Deplagiarization</h3>
+                    <div class="humanization-stats">
+                        <div class="stat">
+                            <span class="stat-label">Plagiarism Before:</span>
+                            <span id="deplagBefore" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Plagiarism After:</span>
+                            <span id="deplagAfter" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Sentences Rewritten:</span>
+                            <span id="deplagRewritten" class="stat-value">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Iterations:</span>
+                            <span id="deplagIterations" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="humanized-text">
+                        <h4>Deplagiarized Output:</h4>
+                        <div id="deplagOutput" class="output-text"></div>
+                        <button id="copyDeplagBtn" class="btn btn-small">Copy to Clipboard</button>
+                    </div>
+                </div>
+
+                <!-- Processing Time -->
+                <div class="processing-time">
+                    Processing time: <span id="processingTime">0</span>s
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <h3>⚠️ Error</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Content Integrity Platform v1.0.0 | Built with state-of-the-art NLP models</p>
+            <p>Supports: TXT, PDF, DOCX, HTML, MD | <a href="/docs" target="_blank">API Documentation</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

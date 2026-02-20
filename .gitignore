@@ -1,0 +1,65 @@
+# ─── HuggingFace cache (models ~70GB) ────────────
+hf_cache/
+.cache/
+
+# ─── Raw datasets (downloaded by setup_all.py) ───
+person_1/data/raw/
+person_1/data/splits/
+person_1/data/processed/
+
+# ─── Person 2 data & index ───────────────────────
+person_2/data/*.jsonl
+person_2/data/*.json
+person_2/data/*.txt
+person_2/data/*.csv
+person_2/reference_index/*.json
+person_2/reference_index/*.pkl
+person_2/reference_index/*.bin
+
+# ─── Person 3 data ───────────────────────────────
+person_3/data/*.jsonl
+person_3/data/*.json
+person_3/data/*.txt
+person_3/models/
+person_3/logs/
+
+# ─── Person 4 data & models ─────────────────────
+person_4/data/
+person_4/models/
+person_4/logs/
+person_4/.cache/
+
+# ─── All checkpoints (produced by training) ──────
+person_1/checkpoints/
+person_2/checkpoints/
+person_3/checkpoints/
+person_4/checkpoints/
+training_from_scratch/checkpoints/
+training_from_scratch/logs/
+training_from_scratch/vocab/
+
+# ─── Python cache ────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+
+# ─── OS files ────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Logs & temp ─────────────────────────────────
+*.log
+*.zip
+*.tar.gz
+training.log
+
+# ─── Pytest cache ────────────────────────────────
+.pytest_cache/

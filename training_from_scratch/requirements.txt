@@ -1,0 +1,5 @@
+# Training From Scratch — Dependencies
+# Minimal: only what we actually use. No HuggingFace transformers needed.
+torch>=2.1.0
+tokenizers>=0.15.0
+numpy>=1.24.0

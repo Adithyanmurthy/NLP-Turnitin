@@ -1,0 +1,2 @@
+# This directory will contain the built MinHash/LSH index
+# Run scripts/build_index.py to create the index

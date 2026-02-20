@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Division — 4 Person Team Distribution</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-2: #232733;
+            --border: #2e3345;
+            --text: #e2e4eb;
+            --text-muted: #9498a8;
+            --accent: #6c8cff;
+            --accent-dim: #3a4f8f;
+            --green: #4ade80;
+            --orange: #f59e0b;
+            --red: #f87171;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --code-bg: #161922;
+            --p1: #6c8cff;
+            --p1-bg: rgba(108, 140, 255, 0.12);
+            --p2: #4ade80;
+            --p2-bg: rgba(74, 222, 128, 0.12);
+            --p3: #f59e0b;
+            --p3-bg: rgba(245, 158, 11, 0.12);
+            --p4: #a78bfa;
+            --p4-bg: rgba(167, 139, 250, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        .hero {
+            text-align: center;
+            padding: 60px 0 48px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 48px;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #6c8cff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero .subtitle { font-size: 1.05rem; color: var(--text-muted); font-weight: 400; }
+
+        .section { margin-bottom: 56px; }
+
+        .section-number {
+            display: inline-block;
+            background: var(--accent-dim);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.3px; }
+        h3 { font-size: 1.15rem; font-weight: 600; margin: 32px 0 14px; }
+        h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; }
+        p { margin-bottom: 14px; }
+        strong { color: #fff; font-weight: 600; }
+
+        a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+        a:hover { border-bottom-color: var(--accent); }
+
+        ul, ol { margin: 0 0 16px 20px; }
+        li { margin-bottom: 6px; }
+        li::marker { color: var(--accent); }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: var(--surface-2); }
+
+        th {
+            text-align: left; padding: 12px 16px; font-weight: 600;
+            color: var(--text-muted); font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(108, 140, 255, 0.04); }
+
+        .model-name { font-weight: 600; color: #fff; white-space: nowrap; }
+
+        pre {
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 20px 24px; overflow-x: auto;
+            margin: 16px 0 24px; font-size: 0.85rem; line-height: 1.6;
+        }
+
+        code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; color: #c4c9de; }
+        p code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 20px 24px; margin: 16px 0;
+        }
+        .card.highlight { border-left: 3px solid var(--accent); }
+
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+        /* Person-specific colors */
+        .person-badge {
+            display: inline-block; padding: 5px 14px; border-radius: 5px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.4px;
+        }
+        .person-badge.p1 { background: var(--p1-bg); color: var(--p1); }
+        .person-badge.p2 { background: var(--p2-bg); color: var(--p2); }
+        .person-badge.p3 { background: var(--p3-bg); color: var(--p3); }
+        .person-badge.p4 { background: var(--p4-bg); color: var(--p4); }
+
+        .person-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 28px; margin: 20px 0;
+        }
+        .person-card.p1 { border-left: 4px solid var(--p1); }
+        .person-card.p2 { border-left: 4px solid var(--p2); }
+        .person-card.p3 { border-left: 4px solid var(--p3); }
+        .person-card.p4 { border-left: 4px solid var(--p4); }
+
+        .person-card h3 { margin-top: 0; }
+        .person-card .role { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 16px; }
+
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin: 24px 0;
+        }
+
+        .stat-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px; text-align: center;
+        }
+
+        .stat-box .stat-value { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .stat-box .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .stat-box.p1 .stat-value { color: var(--p1); }
+        .stat-box.p2 .stat-value { color: var(--p2); }
+        .stat-box.p3 .stat-value { color: var(--p3); }
+        .stat-box.p4 .stat-value { color: var(--p4); }
+
+        .timeline-row {
+            display: grid; grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+            gap: 0; margin-bottom: 2px;
+        }
+
+        .timeline-label {
+            font-size: 0.78rem; color: var(--text-muted); padding: 10px 8px;
+            display: flex; align-items: center;
+        }
+
+        .timeline-bar {
+            padding: 10px 12px; font-size: 0.78rem; font-weight: 600;
+            border-radius: 4px; margin: 2px; text-align: center;
+        }
+
+        .timeline-bar.active-p1 { background: var(--p1-bg); color: var(--p1); }
+        .timeline-bar.active-p2 { background: var(--p2-bg); color: var(--p2); }
+        .timeline-bar.active-p3 { background: var(--p3-bg); color: var(--p3); }
+        .timeline-bar.active-p4 { background: var(--p4-bg); color: var(--p4); }
+        .timeline-bar.empty { background: transparent; }
+
+        .timeline-header {
+            padding: 10px 12px; font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+            color: var(--text-muted);
+        }
+
+        .dep-note {
+            display: inline-block; background: rgba(248, 113, 113, 0.12);
+            color: var(--red); font-size: 0.72rem; font-weight: 600;
+            padding: 2px 8px; border-radius: 3px; margin-left: 6px;
+        }
+
+        .collab-note {
+            display: inline-block; background: rgba(167, 139, 250, 0.12);
+            color: var(--purple); font-size: 0.72rem; font-weight: 600;
+            padding: 2px 8px; border-radius: 3px; margin-left: 6px;
+        }
+
+        .footer {
+            text-align: center; padding: 40px 0 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted); font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 1.6rem; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .timeline-row { grid-template-columns: 80px 1fr 1fr 1fr 1fr; }
+            th, td { padding: 8px 10px; font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>Project Division — 4 Person Team</h1>
+        <p class="subtitle">Content Integrity &amp; Authorship Intelligence Platform — Work Distribution</p>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section">
+        <span class="section-number">OVERVIEW</span>
+        <h2>Division Philosophy</h2>
+
+        <p>The project is divided into <strong>4 equal parts</strong> across 4 people. Each person owns a complete, independent workstream with its own datasets, models, training, and deliverables. The division is designed so that:</p>
+
+        <ul>
+            <li>Each person trains approximately the same number of models</li>
+            <li>Each person works with a comparable volume of data</li>
+            <li>Each person writes roughly the same amount of code</li>
+            <li>Each person's work takes approximately the same time (2–3 weeks per person)</li>
+            <li>Each person can work independently for most of their tasks, with defined integration points</li>
+        </ul>
+
+        <div class="stat-grid">
+            <div class="stat-box p1">
+                <div class="stat-value">P1</div>
+                <div class="stat-label">Data Pipeline &amp; AI Detector</div>
+            </div>
+            <div class="stat-box p2">
+                <div class="stat-value">P2</div>
+                <div class="stat-label">Plagiarism Detection Engine</div>
+            </div>
+            <div class="stat-box p3">
+                <div class="stat-value">P3</div>
+                <div class="stat-label">Humanization &amp; Rewriting</div>
+            </div>
+            <div class="stat-box p4">
+                <div class="stat-value">P4</div>
+                <div class="stat-label">Integration, CLI &amp; App</div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+</div>
+<div class="container">
+
+    <!-- PERSON 1 -->
+    <div class="section">
+        <span class="section-number">PERSON 1</span>
+        <h2>Data Pipeline &amp; AI Detection Module</h2>
+
+        <div class="person-card p1">
+            <h3 style="color: var(--p1);">Person 1 — Responsibilities</h3>
+            <p class="role">Owns the entire data preparation pipeline for ALL three modules, plus builds and trains the AI detection ensemble.</p>
+
+            <h4>Part A: Data Pipeline (Shared Foundation — serves all 4 people)</h4>
+            <p>Person 1 builds the data infrastructure that everyone else depends on. This is the first thing that must be completed.</p>
+            <ul>
+                <li>Download and organize all 18 datasets into a structured local directory</li>
+                <li>Write preprocessing scripts to convert every dataset into unified formats:
+                    <ul>
+                        <li>Classification: <code>{"text": "...", "label": 0/1}</code></li>
+                        <li>Paraphrase: <code>{"input": "...", "output": "..."}</code></li>
+                        <li>Similarity: <code>{"text_a": "...", "text_b": "...", "score": 0.0–1.0}</code></li>
+                    </ul>
+                </li>
+                <li>Clean all data: remove duplicates, handle encoding issues, filter extremes</li>
+                <li>Create train/validation/test splits (80/10/10) with stratification for every dataset</li>
+                <li>Build a shared data loading utility that Person 2, Person 3, and Person 4 can import and use</li>
+            </ul>
+
+            <h4>Part B: AI Detection Ensemble</h4>
+            <ul>
+                <li>Fine-tune <strong>DeBERTa-v3-large</strong> on RAID + HC3 + M4 + FAIDSet for binary AI detection</li>
+                <li>Fine-tune <strong>RoBERTa-large</strong> on RAID + HC3 + OpenAI GPT-2 Output Dataset as ensemble member</li>
+                <li>Fine-tune <strong>Longformer-base</strong> on RAID (long documents) for long-text AI detection</li>
+                <li>Fine-tune <strong>XLM-RoBERTa-large</strong> on M4 (multilingual split) + FAIDSet for multilingual detection</li>
+                <li>Train the <strong>meta-classifier</strong> (logistic regression) on combined predictions of all four models</li>
+                <li>Evaluate the full ensemble on held-out test sets — report accuracy, F1, precision, recall, AUROC</li>
+                <li>Export all trained models as saved checkpoints that Person 4 can load</li>
+            </ul>
+        </div>
+
+        <h3>Person 1 — Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Dataset</th><th>Usage</th><th>Size</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">RAID</td><td>Primary AI detection training</td><td>10M+ docs</td></tr>
+                    <tr><td class="model-name">HC3</td><td>Human vs ChatGPT classification</td><td>~40K pairs</td></tr>
+                    <tr><td class="model-name">M4</td><td>Multi-generator, multilingual detection</td><td>Multi-million</td></tr>
+                    <tr><td class="model-name">OpenAI GPT-2 Output</td><td>Baseline detection training</td><td>1.5M+ samples</td></tr>
+                    <tr><td class="model-name">FAIDSet</td><td>Fine-grained detection (human/AI/mixed)</td><td>Large-scale</td></tr>
+                    <tr><td class="model-name">PAN Author ID Corpora</td><td>Stylometry / authorship patterns</td><td>Varies</td></tr>
+                    <tr><td class="model-name">All other datasets <span class="collab-note">PREPROCESSING ONLY</span></td><td>Download, clean, format for Person 2 &amp; 3</td><td>All</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 1 — Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Model</th><th>Task</th><th>Params</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">DeBERTa-v3-large</td><td>Primary AI classifier</td><td>304M</td></tr>
+                    <tr><td class="model-name">RoBERTa-large</td><td>Ensemble member</td><td>355M</td></tr>
+                    <tr><td class="model-name">Longformer-base</td><td>Long document AI detection</td><td>149M</td></tr>
+                    <tr><td class="model-name">XLM-RoBERTa-large</td><td>Multilingual AI detection</td><td>560M</td></tr>
+                    <tr><td class="model-name">Meta-classifier (sklearn)</td><td>Ensemble combiner</td><td>N/A</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 1 — Deliverables</h3>
+        <ul>
+            <li>Cleaned, formatted, split datasets for all three modules (shared with team)</li>
+            <li>Data loading utility module (<code>data_loader.py</code>)</li>
+            <li>4 trained AI detection model checkpoints</li>
+            <li>1 trained meta-classifier</li>
+            <li>An <code>ai_detector.py</code> module with a function: <code>detect(text) → float</code> (returns AI probability 0.0–1.0)</li>
+            <li>Evaluation report with metrics on test set</li>
+        </ul>
+
+        <h3>Person 1 — Estimated Time</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Task</th><th>Duration</th></tr></thead>
+                <tbody>
+                    <tr><td>Data download &amp; preprocessing (all datasets)</td><td>1.5 weeks</td></tr>
+                    <tr><td>Fine-tune DeBERTa-v3 + RoBERTa</td><td>1 week</td></tr>
+                    <tr><td>Fine-tune Longformer + XLM-RoBERTa</td><td>1 week</td></tr>
+                    <tr><td>Train meta-classifier + evaluation</td><td>0.5 weeks</td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>4 weeks</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- PERSON 2 -->
+    <div class="section">
+        <span class="section-number">PERSON 2</span>
+        <h2>Plagiarism Detection Engine</h2>
+
+        <div class="person-card p2">
+            <h3 style="color: var(--p2);">Person 2 — Responsibilities</h3>
+            <p class="role">Owns the entire plagiarism detection pipeline — from building the reference index to sentence-level comparison to final verification scoring.</p>
+
+            <h4>Part A: Reference Index &amp; Fast Screening</h4>
+            <ul>
+                <li>Implement <strong>MinHash / LSH</strong> using the Datasketch library</li>
+                <li>Build a reference document index from PAN Plagiarism Corpora and WikiSplit</li>
+                <li>Create the fingerprinting pipeline: document → shingles → MinHash signature → LSH index</li>
+                <li>Implement the first-pass screening: input document → query LSH → return candidate matches</li>
+                <li>Tune the LSH threshold for optimal precision/recall tradeoff</li>
+            </ul>
+
+            <h4>Part B: Semantic Similarity Models</h4>
+            <ul>
+                <li>Fine-tune <strong>Sentence-BERT (all-mpnet-base-v2)</strong> on STS Benchmark + PAWS + QQP using contrastive loss</li>
+                <li>Fine-tune <strong>SimCSE</strong> on STS Benchmark + PAWS + ParaNMT-50M (subset) using the SimCSE training procedure</li>
+                <li>Fine-tune <strong>DeBERTa-v3 Cross-Encoder</strong> on PAWS + MRPC + PAN Plagiarism pairs as a pairwise similarity scorer</li>
+                <li>Fine-tune <strong>Longformer</strong> for document-level similarity comparison on PAN long documents</li>
+            </ul>
+
+            <h4>Part C: Plagiarism Pipeline</h4>
+            <ul>
+                <li>Build the full pipeline: MinHash screening → sentence splitting → Sentence-BERT/SimCSE embedding → cosine similarity → DeBERTa cross-encoder verification</li>
+                <li>Implement sentence-level alignment between input and candidate documents</li>
+                <li>Generate plagiarism reports: matched sentences, source references, similarity scores</li>
+                <li>Evaluate on PAN test sets using standard PAN metrics</li>
+            </ul>
+        </div>
+
+        <h3>Person 2 — Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Dataset</th><th>Usage</th><th>Size</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">PAN Plagiarism Corpora (2009–2015)</td><td>Reference index + training + evaluation</td><td>Thousands of pairs</td></tr>
+                    <tr><td class="model-name">Clough &amp; Stevenson</td><td>Fine-grained plagiarism level training</td><td>~100 docs</td></tr>
+                    <tr><td class="model-name">Webis Crowd Paraphrase 2011</td><td>Paraphrase-plagiarism training</td><td>~4K pairs</td></tr>
+                    <tr><td class="model-name">WikiSplit</td><td>Sentence restructuring detection</td><td>1M pairs</td></tr>
+                    <tr><td class="model-name">STS Benchmark</td><td>Similarity model training + threshold calibration</td><td>~8.6K pairs</td></tr>
+                    <tr><td class="model-name">PAWS</td><td>Adversarial paraphrase detection training</td><td>~108K pairs</td></tr>
+                    <tr><td class="model-name">QQP</td><td>Semantic equivalence training</td><td>400K+ pairs</td></tr>
+                    <tr><td class="model-name">MRPC</td><td>Cross-encoder fine-tuning</td><td>~5.8K pairs</td></tr>
+                    <tr><td class="model-name">ParaNMT-50M (subset)</td><td>SimCSE training</td><td>Subset</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 2 — Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Model</th><th>Task</th><th>Params</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">MinHash / LSH (Datasketch)</td><td>Fast first-pass duplicate screening</td><td>N/A (algorithmic)</td></tr>
+                    <tr><td class="model-name">Sentence-BERT (all-mpnet-base-v2)</td><td>Sentence embedding for similarity</td><td>109M</td></tr>
+                    <tr><td class="model-name">SimCSE</td><td>Improved contrastive sentence embeddings</td><td>~110M</td></tr>
+                    <tr><td class="model-name">DeBERTa-v3 Cross-Encoder</td><td>Pairwise plagiarism verification</td><td>304M</td></tr>
+                    <tr><td class="model-name">Longformer (similarity head)</td><td>Document-level comparison</td><td>149M</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 2 — Deliverables</h3>
+        <ul>
+            <li>MinHash/LSH reference index builder and query module</li>
+            <li>4 trained model checkpoints (Sentence-BERT, SimCSE, Cross-Encoder, Longformer-similarity)</li>
+            <li>A <code>plagiarism_detector.py</code> module with a function: <code>check(text, index) → report</code> (returns matched sources, sentences, scores)</li>
+            <li>Evaluation report on PAN test sets</li>
+        </ul>
+
+        <h3>Person 2 — Estimated Time</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Task</th><th>Duration</th></tr></thead>
+                <tbody>
+                    <tr><td>Implement MinHash/LSH + build reference index</td><td>1 week</td></tr>
+                    <tr><td>Fine-tune Sentence-BERT + SimCSE</td><td>1 week</td></tr>
+                    <tr><td>Fine-tune DeBERTa Cross-Encoder + Longformer</td><td>1 week</td></tr>
+                    <tr><td>Build full pipeline + evaluation</td><td>1 week</td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>4 weeks</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- PERSON 3 -->
+    <div class="section">
+        <span class="section-number">PERSON 3</span>
+        <h2>Humanization &amp; Content Transformation Module</h2>
+
+        <div class="person-card p3">
+            <h3 style="color: var(--p3);">Person 3 — Responsibilities</h3>
+            <p class="role">Owns the entire humanization pipeline — training the rewriting models, building the feedback loop with Person 1's detector, and ensuring transformed output passes as human-written.</p>
+
+            <h4>Part A: Paraphrase Model Training</h4>
+            <ul>
+                <li>Prepare parallel training data from ParaNMT-50M, PAWS, QQP, MRPC (input-output paraphrase pairs)</li>
+                <li>Generate additional AI→Human pairs using HC3 dataset (AI answers as input, human answers as target)</li>
+                <li>Fine-tune <strong>Flan-T5-XL</strong> on combined paraphrase data for controlled rewriting</li>
+                <li>Fine-tune <strong>PEGASUS-large</strong> on ParaNMT-50M subset + MRPC for abstractive restructuring</li>
+                <li>Fine-tune <strong>Mistral-7B</strong> using QLoRA on ParaNMT-50M + PAWS + QQP + BEA-2019 GEC for full humanization</li>
+                <li>Configure and test <strong>DIPPER</strong> (11B paraphraser) — use pretrained weights, fine-tune lightly on project-specific data if needed</li>
+            </ul>
+
+            <h4>Part B: Quality &amp; Human-likeness</h4>
+            <ul>
+                <li>Use BEA-2019 GEC data to train the models to introduce natural human imperfections</li>
+                <li>Use STS Benchmark to build a meaning-preservation evaluator — ensure rewritten text still means the same thing</li>
+                <li>Implement diversity metrics: measure lexical variation, sentence length variation, and structural variety in output</li>
+            </ul>
+
+            <h4>Part C: Feedback Loop</h4>
+            <ul>
+                <li>Integrate with Person 1's AI detector: after rewriting, run output through <code>ai_detector.detect()</code> <span class="dep-note">DEPENDS ON P1</span></li>
+                <li>Implement the iterative refinement loop: if AI score is above threshold, increase diversity/reorder parameters and rewrite again</li>
+                <li>Tune the feedback loop parameters for optimal balance between humanization quality and meaning preservation</li>
+            </ul>
+        </div>
+
+        <h3>Person 3 — Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Dataset</th><th>Usage</th><th>Size</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">ParaNMT-50M</td><td>Primary paraphrase training (sample 1M–5M pairs)</td><td>50M pairs</td></tr>
+                    <tr><td class="model-name">PAWS</td><td>Adversarial paraphrase training</td><td>~108K pairs</td></tr>
+                    <tr><td class="model-name">QQP</td><td>Semantic equivalence training</td><td>400K+ pairs</td></tr>
+                    <tr><td class="model-name">MRPC</td><td>Formal text rewriting fine-tuning</td><td>~5.8K pairs</td></tr>
+                    <tr><td class="model-name">BEA-2019 GEC</td><td>Human imperfection modeling</td><td>Large-scale</td></tr>
+                    <tr><td class="model-name">STS Benchmark</td><td>Meaning preservation evaluation</td><td>~8.6K pairs</td></tr>
+                    <tr><td class="model-name">HC3</td><td>AI→Human parallel pairs for training</td><td>~40K pairs</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 3 — Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Model</th><th>Task</th><th>Params</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">DIPPER (Discourse Paraphraser)</td><td>Paragraph-level paraphrasing with control knobs</td><td>11B</td></tr>
+                    <tr><td class="model-name">Flan-T5-XL</td><td>Controlled seq2seq rewriting</td><td>3B</td></tr>
+                    <tr><td class="model-name">PEGASUS-large</td><td>Abstractive restructuring</td><td>568M</td></tr>
+                    <tr><td class="model-name">Mistral-7B (QLoRA)</td><td>Full humanization with style variation</td><td>7B</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 3 — Deliverables</h3>
+        <ul>
+            <li>4 trained rewriting model checkpoints (DIPPER, Flan-T5-XL, PEGASUS, Mistral-7B)</li>
+            <li>Meaning preservation evaluator module</li>
+            <li>Feedback loop implementation</li>
+            <li>A <code>humanizer.py</code> module with a function: <code>humanize(text) → str</code> (returns humanized text)</li>
+            <li>Evaluation report: AI detection scores before/after humanization, meaning preservation scores</li>
+        </ul>
+
+        <h3>Person 3 — Estimated Time</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Task</th><th>Duration</th></tr></thead>
+                <tbody>
+                    <tr><td>Prepare parallel training data from all paraphrase datasets</td><td>0.5 weeks</td></tr>
+                    <tr><td>Fine-tune Flan-T5-XL + PEGASUS</td><td>1 week</td></tr>
+                    <tr><td>Fine-tune Mistral-7B (QLoRA) + configure DIPPER</td><td>1.5 weeks</td></tr>
+                    <tr><td>Build feedback loop + quality evaluation + iteration</td><td>1 week</td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>4 weeks</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- PERSON 4 -->
+    <div class="section">
+        <span class="section-number">PERSON 4</span>
+        <h2>Integration, CLI Tool &amp; Application</h2>
+
+        <div class="person-card p4">
+            <h3 style="color: var(--p4);">Person 4 — Responsibilities</h3>
+            <p class="role">Owns the system integration, the command-line interface, the evaluation framework, and the web application. Connects all three modules into a single working product.</p>
+
+            <h4>Part A: System Architecture &amp; Integration</h4>
+            <ul>
+                <li>Design the project directory structure and module interfaces</li>
+                <li>Define the API contracts between modules:
+                    <ul>
+                        <li>Person 1's <code>ai_detector.detect(text) → float</code></li>
+                        <li>Person 2's <code>plagiarism_detector.check(text, index) → report</code></li>
+                        <li>Person 3's <code>humanizer.humanize(text) → str</code></li>
+                    </ul>
+                </li>
+                <li>Build the main pipeline that chains all three modules together</li>
+                <li>Handle model loading, GPU memory management, and inference optimization</li>
+                <li>Implement error handling, input validation, and edge case management</li>
+            </ul>
+
+            <h4>Part B: Command-Line Interface (CLI)</h4>
+            <ul>
+                <li>Build <code>main.py</code> with argument parsing (argparse or click)</li>
+                <li>Support multiple input modes: string argument, file path, stdin pipe</li>
+                <li>Implement formatted terminal output with the analysis report</li>
+                <li>Add flags: <code>--detect</code>, <code>--plagiarism</code>, <code>--humanize</code>, <code>--full</code> (all three)</li>
+                <li>Add <code>--output</code> flag to save results to file (JSON or text)</li>
+            </ul>
+
+            <h4>Part C: Evaluation &amp; Testing Framework</h4>
+            <ul>
+                <li>Build a comprehensive test suite for the integrated pipeline</li>
+                <li>Create benchmark scripts that run all three modules on standard test sets</li>
+                <li>Implement end-to-end tests: input text → full report → verify correctness</li>
+                <li>Test edge cases: empty input, very short text, very long text, non-English text, mixed AI/human text</li>
+                <li>Generate the final project evaluation report with all metrics</li>
+            </ul>
+
+            <h4>Part D: Web Application</h4>
+            <ul>
+                <li>Build a FastAPI backend that wraps the pipeline as REST endpoints</li>
+                <li>Build a frontend (HTML/CSS/JS or React) with:
+                    <ul>
+                        <li>Text input area</li>
+                        <li>"Analyze" button → shows AI score + plagiarism report</li>
+                        <li>"Humanize" button → shows transformed text + post-humanization score</li>
+                        <li>Results display with visual indicators (progress bars, color coding)</li>
+                    </ul>
+                </li>
+                <li>Handle async processing for long texts</li>
+                <li>Add basic rate limiting and input validation</li>
+            </ul>
+        </div>
+
+        <h3>Person 4 — Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Dataset</th><th>Usage</th><th>Size</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">RAID (test split)</td><td>End-to-end AI detection evaluation</td><td>Test split</td></tr>
+                    <tr><td class="model-name">PAN Plagiarism (test split)</td><td>End-to-end plagiarism evaluation</td><td>Test split</td></tr>
+                    <tr><td class="model-name">HC3 (test split)</td><td>End-to-end humanization evaluation</td><td>Test split</td></tr>
+                    <tr><td class="model-name">Custom test cases</td><td>Edge case testing (short, long, mixed, multilingual)</td><td>Self-created</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 4 — Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Model</th><th>Task</th><th>Note</th></tr></thead>
+                <tbody>
+                    <tr><td class="model-name">All P1 models <span class="dep-note">LOADS FROM P1</span></td><td>AI detection inference</td><td>Loads saved checkpoints</td></tr>
+                    <tr><td class="model-name">All P2 models <span class="dep-note">LOADS FROM P2</span></td><td>Plagiarism detection inference</td><td>Loads saved checkpoints</td></tr>
+                    <tr><td class="model-name">All P3 models <span class="dep-note">LOADS FROM P3</span></td><td>Humanization inference</td><td>Loads saved checkpoints</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Person 4 — Deliverables</h3>
+        <ul>
+            <li>Project directory structure and module interface definitions</li>
+            <li>Integrated pipeline module (<code>pipeline.py</code>)</li>
+            <li>CLI tool (<code>main.py</code>) with full argument support</li>
+            <li>Comprehensive test suite and benchmark scripts</li>
+            <li>FastAPI backend with REST endpoints</li>
+            <li>Web frontend (HTML/CSS/JS or React)</li>
+            <li>Final project evaluation report</li>
+            <li>README and setup documentation</li>
+        </ul>
+
+        <h3>Person 4 — Estimated Time</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Task</th><th>Duration</th></tr></thead>
+                <tbody>
+                    <tr><td>System architecture + module interfaces + integration</td><td>1 week</td></tr>
+                    <tr><td>CLI tool + formatted output</td><td>0.5 weeks</td></tr>
+                    <tr><td>Testing framework + edge cases + benchmarks</td><td>1 week</td></tr>
+                    <tr><td>Web application (FastAPI + frontend)</td><td>1.5 weeks</td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>4 weeks</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- EQUALITY BREAKDOWN -->
+    <div class="section">
+        <span class="section-number">EQUALITY CHECK</span>
+        <h2>Work Distribution — Equality Breakdown</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th><span class="person-badge p1">Person 1</span></th>
+                        <th><span class="person-badge p2">Person 2</span></th>
+                        <th><span class="person-badge p3">Person 3</span></th>
+                        <th><span class="person-badge p4">Person 4</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="model-name">Total Time</td>
+                        <td>4 weeks</td>
+                        <td>4 weeks</td>
+                        <td>4 weeks</td>
+                        <td>4 weeks</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Models to Train</td>
+                        <td>4 neural + 1 meta</td>
+                        <td>4 neural + 1 algorithmic</td>
+                        <td>4 neural</td>
+                        <td>0 (loads all)</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Datasets Used</td>
+                        <td>6 own + all (preprocessing)</td>
+                        <td>9 datasets</td>
+                        <td>7 datasets</td>
+                        <td>Test splits + custom</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Code Modules</td>
+                        <td><code>data_loader.py</code><br><code>ai_detector.py</code></td>
+                        <td><code>plagiarism_detector.py</code><br><code>reference_index.py</code></td>
+                        <td><code>humanizer.py</code><br><code>evaluator.py</code></td>
+                        <td><code>pipeline.py</code>, <code>main.py</code><br><code>app.py</code>, <code>tests/</code></td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Primary Skill</td>
+                        <td>Data engineering + classification</td>
+                        <td>Similarity systems + IR</td>
+                        <td>Seq2seq + generation</td>
+                        <td>Software engineering + UI</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Coding Effort</td>
+                        <td>~25%</td>
+                        <td>~25%</td>
+                        <td>~25%</td>
+                        <td>~25%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- TIMELINE -->
+    <div class="section">
+        <span class="section-number">TIMELINE</span>
+        <h2>Parallel Work Schedule</h2>
+
+        <p>All four people work in parallel. The timeline shows who is doing what each week. Dependencies are marked — Person 4 needs outputs from Persons 1, 2, and 3 for final integration.</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th><span class="person-badge p1">Person 1</span></th>
+                        <th><span class="person-badge p2">Person 2</span></th>
+                        <th><span class="person-badge p3">Person 3</span></th>
+                        <th><span class="person-badge p4">Person 4</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="model-name">Week 1</td>
+                        <td>Download &amp; preprocess all datasets</td>
+                        <td>Implement MinHash/LSH + build reference index</td>
+                        <td>Prepare parallel training data from paraphrase datasets</td>
+                        <td>Design project structure + define module interfaces + API contracts</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Week 2</td>
+                        <td>Fine-tune DeBERTa-v3 + RoBERTa on AI detection data</td>
+                        <td>Fine-tune Sentence-BERT + SimCSE on similarity data</td>
+                        <td>Fine-tune Flan-T5-XL + PEGASUS on paraphrase data</td>
+                        <td>Build CLI tool (<code>main.py</code>) with argument parsing + formatted output</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Week 3</td>
+                        <td>Fine-tune Longformer + XLM-RoBERTa</td>
+                        <td>Fine-tune DeBERTa Cross-Encoder + Longformer-similarity</td>
+                        <td>Fine-tune Mistral-7B (QLoRA) + configure DIPPER</td>
+                        <td>Build testing framework + edge case tests + benchmark scripts</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Week 4</td>
+                        <td>Train meta-classifier + evaluate ensemble + export checkpoints</td>
+                        <td>Build full plagiarism pipeline + evaluate on PAN tests</td>
+                        <td>Build feedback loop with P1's detector + evaluate humanization quality</td>
+                        <td>Integrate all modules + build web app (FastAPI + frontend)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card highlight">
+            <h4>Key Dependencies</h4>
+            <ul>
+                <li><strong>Week 1:</strong> Person 1 must finish data preprocessing by end of Week 1 so Persons 2 and 3 can use the cleaned datasets starting Week 2. (Persons 2 and 3 can start their non-data tasks in Week 1 in parallel.)</li>
+                <li><strong>Week 4:</strong> Person 3 needs Person 1's trained AI detector to build the feedback loop. Person 1 should share the detector checkpoint by end of Week 3.</li>
+                <li><strong>Week 4:</strong> Person 4 needs all three modules' checkpoints and code to integrate. Persons 1, 2, and 3 should share their deliverables by mid-Week 4.</li>
+            </ul>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- INTEGRATION POINTS -->
+    <div class="section">
+        <span class="section-number">INTEGRATION</span>
+        <h2>How the 4 Parts Connect</h2>
+
+        <pre><code><span style="color: var(--p1);">Person 1: data_loader.py + ai_detector.py</span>
+    │
+    ├──→ Cleaned datasets shared with <span style="color: var(--p2);">Person 2</span> and <span style="color: var(--p3);">Person 3</span>
+    │
+    ├──→ ai_detector.detect(text) used by <span style="color: var(--p3);">Person 3</span> (feedback loop)
+    │
+    └──→ ai_detector.detect(text) used by <span style="color: var(--p4);">Person 4</span> (pipeline)
+
+<span style="color: var(--p2);">Person 2: plagiarism_detector.py + reference_index.py</span>
+    │
+    └──→ plagiarism_detector.check(text) used by <span style="color: var(--p4);">Person 4</span> (pipeline)
+
+<span style="color: var(--p3);">Person 3: humanizer.py + evaluator.py</span>
+    │
+    └──→ humanizer.humanize(text) used by <span style="color: var(--p4);">Person 4</span> (pipeline)
+
+<span style="color: var(--p4);">Person 4: pipeline.py + main.py + app.py</span>
+    │
+    ├──→ Imports and chains P1 + P2 + P3 modules
+    ├──→ CLI: python main.py --input "text" --full
+    └──→ Web: FastAPI + frontend at localhost:8000</code></pre>
+
+        <div class="card highlight">
+            <h4>Shared Code Agreement</h4>
+            <p>All four people must agree on these interface contracts before starting:</p>
+            <ul>
+                <li><code>ai_detector.detect(text: str) → float</code> — returns 0.0 (human) to 1.0 (AI)</li>
+                <li><code>plagiarism_detector.check(text: str) → dict</code> — returns <code>{"score": float, "matches": [{"source": str, "similarity": float, "sentences": list}]}</code></li>
+                <li><code>humanizer.humanize(text: str) → dict</code> — returns <code>{"text": str, "ai_score_before": float, "ai_score_after": float}</code></li>
+            </ul>
+            <p>Person 4 defines these contracts in Week 1. All other persons implement to these contracts.</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- FINAL SUMMARY -->
+    <div class="section">
+        <span class="section-number">SUMMARY</span>
+        <h2>Final Distribution Summary</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Person</th><th>Owns</th><th>Models</th><th>Time</th><th>Key Deliverable</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="person-badge p1">Person 1</span></td>
+                        <td>Data pipeline + AI detection</td>
+                        <td>5 (4 neural + 1 meta)</td>
+                        <td>4 weeks</td>
+                        <td><code>ai_detector.py</code> + all cleaned datasets</td>
+                    </tr>
+                    <tr>
+                        <td><span class="person-badge p2">Person 2</span></td>
+                        <td>Plagiarism detection engine</td>
+                        <td>5 (4 neural + 1 algorithmic)</td>
+                        <td>4 weeks</td>
+                        <td><code>plagiarism_detector.py</code> + reference index</td>
+                    </tr>
+                    <tr>
+                        <td><span class="person-badge p3">Person 3</span></td>
+                        <td>Humanization &amp; rewriting</td>
+                        <td>4 neural</td>
+                        <td>4 weeks</td>
+                        <td><code>humanizer.py</code> + feedback loop</td>
+                    </tr>
+                    <tr>
+                        <td><span class="person-badge p4">Person 4</span></td>
+                        <td>Integration, CLI &amp; web app</td>
+                        <td>0 (loads all from P1/P2/P3)</td>
+                        <td>4 weeks</td>
+                        <td><code>main.py</code> + <code>app.py</code> + test suite</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card warning">
+            <p><strong>Total project time:</strong> 4 weeks (all 4 people working in parallel). Without parallelization, this would take 16 weeks. The 4-person split reduces calendar time by 75%.</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="footer">
+        <p>Content Integrity &amp; Authorship Intelligence Platform — 4 Person Team Distribution<br>
+        Each person: equal work, equal time, equal coding, equal responsibility.</p>
+    </div>
+
+</div>
+</body>
+</html>

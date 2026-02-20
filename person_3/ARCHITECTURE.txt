@@ -1,0 +1,316 @@
+================================================================================
+                    PERSON 3 - MODULE ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         PERSON 3 MODULE OVERVIEW                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌──────────────┐
+                              │   Person 4   │
+                              │  (Pipeline)  │
+                              └──────┬───────┘
+                                     │
+                                     │ imports
+                                     ▼
+                         ┌───────────────────────┐
+                         │   humanizer.py        │
+                         │   humanize(text)      │
+                         └───────────┬───────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+          │  Flan-T5-XL │  │   PEGASUS   │  │  Mistral-7B │
+          │     (3B)    │  │   (568M)    │  │     (7B)    │
+          └─────────────┘  └─────────────┘  └─────────────┘
+                    │                │                │
+                    └────────────────┼────────────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │   Feedback Loop       │
+                         │   (with Person 1)     │
+                         └───────────────────────┘
+
+
+================================================================================
+                         DATA FLOW DIAGRAM
+================================================================================
+
+1. DATASET DOWNLOAD
+   ┌─────────────────────────────────────────────────────────────┐
+   │  dataset_downloader.py                                      │
+   │                                                             │
+   │  Downloads from HuggingFace:                                │
+   │  • PAWS (108K pairs)                                        │
+   │  • QQP (400K pairs → sampled to 100K)                       │
+   │  • MRPC (5.8K pairs)                                        │
+   │  • BEA-GEC (error correction)                               │
+   │  • STS Benchmark (8.6K pairs)                               │
+   │  • HC3 (40K AI→Human pairs)                                 │
+   │  • ParaNMT-50M (optional)                                   │
+   │                                                             │
+   │  Outputs:                                                   │
+   │  → data/train.jsonl                                         │
+   │  → data/validation.jsonl                                    │
+   │  → data/test.jsonl                                          │
+   └─────────────────────────────────────────────────────────────┘
+
+2. MODEL TRAINING
+   ┌─────────────────────────────────────────────────────────────┐
+   │  train_flan_t5.py                                           │
+   │  ├─ Loads: data/train.jsonl                                 │
+   │  ├─ Trains: Flan-T5-XL (3B params)                          │
+   │  ├─ Epochs: 3                                               │
+   │  ├─ Learning Rate: 1e-4                                     │
+   │  └─ Saves: checkpoints/flan_t5_xl_final/                    │
+   └─────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │  train_pegasus.py                                           │
+   │  ├─ Loads: data/train.jsonl                                 │
+   │  ├─ Trains: PEGASUS-large (568M params)                     │
+   │  ├─ Epochs: 3                                               │
+   │  ├─ Learning Rate: 1e-4                                     │
+   │  └─ Saves: checkpoints/pegasus_large_final/                 │
+   └─────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │  train_mistral.py                                           │
+   │  ├─ Loads: data/train.jsonl                                 │
+   │  ├─ Trains: Mistral-7B with QLoRA (7B params)               │
+   │  ├─ Epochs: 2                                               │
+   │  ├─ Learning Rate: 2e-4                                     │
+   │  ├─ LoRA Rank: 16                                           │
+   │  └─ Saves: checkpoints/mistral_7b_qlora_final/              │
+   └─────────────────────────────────────────────────────────────┘
+
+3. HUMANIZATION PIPELINE
+   ┌─────────────────────────────────────────────────────────────┐
+   │  humanizer.py                                               │
+   │                                                             │
+   │  Input: text (AI-generated)                                 │
+   │     │                                                       │
+   │     ▼                                                       │
+   │  ┌─────────────────────────────────────┐                   │
+   │  │ 1. Load Model (Flan-T5/PEGASUS/etc) │                   │
+   │  └─────────────────────────────────────┘                   │
+   │     │                                                       │
+   │     ▼                                                       │
+   │  ┌─────────────────────────────────────┐                   │
+   │  │ 2. Initial Paraphrase               │                   │
+   │  │    diversity=60, reorder=40         │                   │
+   │  └─────────────────────────────────────┘                   │
+   │     │                                                       │
+   │     ▼                                                       │
+   │  ┌─────────────────────────────────────┐                   │
+   │  │ 3. Check AI Score (Person 1)        │                   │
+   │  │    if score > 0.2:                  │                   │
+   │  └─────────────────────────────────────┘                   │
+   │     │                                                       │
+   │     ▼                                                       │
+   │  ┌─────────────────────────────────────┐                   │
+   │  │ 4. Feedback Loop                    │                   │
+   │  │    Increase diversity & reorder     │                   │
+   │  │    Re-paraphrase                    │                   │
+   │  │    Check score again                │                   │
+   │  │    Repeat up to 5 times             │                   │
+   │  └─────────────────────────────────────┘                   │
+   │     │                                                       │
+   │     ▼                                                       │
+   │  Output: {                                                  │
+   │    "text": "humanized text",                                │
+   │    "ai_score_before": 0.85,                                 │
+   │    "ai_score_after": 0.15,                                  │
+   │    "iterations": 2,                                         │
+   │    "diversity_used": 70,                                    │
+   │    "reorder_used": 50                                       │
+   │  }                                                          │
+   └─────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                         INTEGRATION POINTS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         WITH PERSON 1 (AI DETECTOR)                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Person 3 Module                    Person 1 Module                         │
+│  ┌──────────────┐                   ┌──────────────┐                       │
+│  │ humanizer.py │ ───────calls────▶ │ai_detector.py│                       │
+│  │              │ ◀────returns───── │ detect(text) │                       │
+│  └──────────────┘    AI score       └──────────────┘                       │
+│                                                                             │
+│  Location: ../person1/ai_detector.py                                        │
+│  Function: detect(text: str) → float (0.0 to 1.0)                          │
+│  Usage: Feedback loop to iteratively improve humanization                  │
+│  Fallback: Works without it (single-pass humanization)                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         WITH PERSON 4 (INTEGRATION)                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Person 4 Pipeline                  Person 3 Module                         │
+│  ┌──────────────┐                   ┌──────────────┐                       │
+│  │  pipeline.py │ ───────calls────▶ │ humanizer.py │                       │
+│  │   main.py    │ ◀────returns───── │humanize(text)│                       │
+│  │   app.py     │      result       └──────────────┘                       │
+│  └──────────────┘                                                           │
+│                                                                             │
+│  Import: from person3.humanizer import humanize                             │
+│  Usage: result = humanize("AI-generated text")                              │
+│  Returns: dict with humanized text and metrics                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                         FILE DEPENDENCIES
+================================================================================
+
+config.py
+  ├─ Used by: ALL training scripts
+  ├─ Contains: Model configs, training params, feedback settings
+  └─ Edit this to customize behavior
+
+dataset_downloader.py
+  ├─ Depends on: config.py
+  ├─ Creates: data/train.jsonl, data/validation.jsonl, data/test.jsonl
+  └─ Run first: Downloads all datasets
+
+data_loader.py
+  ├─ Depends on: config.py, data/*.jsonl
+  ├─ Used by: All training scripts
+  └─ Loads data for training
+
+train_flan_t5.py
+  ├─ Depends on: config.py, data_loader.py, data/*.jsonl
+  ├─ Creates: checkpoints/flan_t5_xl_final/
+  └─ Trains Flan-T5-XL model
+
+train_pegasus.py
+  ├─ Depends on: config.py, data_loader.py, data/*.jsonl
+  ├─ Creates: checkpoints/pegasus_large_final/
+  └─ Trains PEGASUS-large model
+
+train_mistral.py
+  ├─ Depends on: config.py, data_loader.py, data/*.jsonl
+  ├─ Creates: checkpoints/mistral_7b_qlora_final/
+  └─ Trains Mistral-7B with QLoRA
+
+setup_dipper.py
+  ├─ Depends on: config.py
+  ├─ Creates: checkpoints/dipper_xxl/
+  └─ Downloads pretrained DIPPER
+
+humanizer.py
+  ├─ Depends on: config.py, checkpoints/*
+  ├─ Optional: ../person1/ai_detector.py (for feedback loop)
+  ├─ Used by: Person 4
+  └─ Main API function: humanize(text)
+
+evaluator.py
+  ├─ Depends on: sentence-transformers
+  ├─ Used by: humanizer.py (optional)
+  └─ Calculates quality metrics
+
+run_all.py
+  ├─ Depends on: ALL scripts
+  ├─ Runs: Everything in sequence
+  └─ Master automation script
+
+
+================================================================================
+                         EXECUTION ORDER
+================================================================================
+
+AUTOMATIC (run_all.py):
+  1. dataset_downloader.py  → Downloads datasets
+  2. train_flan_t5.py       → Trains Flan-T5
+  3. train_pegasus.py       → Trains PEGASUS
+  4. train_mistral.py       → Trains Mistral (optional)
+  5. setup_dipper.py        → Downloads DIPPER (optional)
+  6. humanizer.py           → Tests everything
+
+MANUAL:
+  Step 1: python dataset_downloader.py
+  Step 2: python train_flan_t5.py
+  Step 3: python train_pegasus.py
+  Step 4: python train_mistral.py (optional)
+  Step 5: python setup_dipper.py (optional)
+  Step 6: python humanizer.py (test)
+
+
+================================================================================
+                         MONITORING & TESTING
+================================================================================
+
+check_status.py
+  ├─ Checks: Dependencies, datasets, models, integration
+  ├─ Shows: What's ready, what's missing
+  └─ Run anytime to see status
+
+progress_tracker.py
+  ├─ Tracks: Training progress
+  ├─ Shows: Visual progress bar, time estimates
+  └─ Run anytime to see progress
+
+quick_test.py
+  ├─ Tests: Basic functionality
+  ├─ Validates: Imports, files, directories
+  └─ Quick validation check
+
+example_usage.py
+  ├─ Demonstrates: How to use humanizer
+  ├─ Shows: Different usage patterns
+  └─ Educational examples
+
+
+================================================================================
+                         CONFIGURATION HIERARCHY
+================================================================================
+
+config.py
+  │
+  ├─ DATASETS
+  │   ├─ paranmt (ParaNMT-50M)
+  │   ├─ paws (PAWS)
+  │   ├─ qqp (QQP)
+  │   ├─ mrpc (MRPC)
+  │   ├─ bea_gec (BEA-2019 GEC)
+  │   ├─ sts (STS Benchmark)
+  │   └─ hc3 (HC3)
+  │
+  ├─ MODELS
+  │   ├─ dipper (11B)
+  │   ├─ flan_t5 (3B)
+  │   ├─ pegasus (568M)
+  │   └─ mistral (7B)
+  │
+  ├─ TRAINING_CONFIG
+  │   ├─ train_split: 0.8
+  │   ├─ val_split: 0.1
+  │   ├─ test_split: 0.1
+  │   ├─ batch_size: varies by model
+  │   └─ learning_rate: varies by model
+  │
+  ├─ FEEDBACK_CONFIG
+  │   ├─ initial_diversity: 60
+  │   ├─ initial_reorder: 40
+  │   ├─ target_ai_score: 0.2
+  │   └─ max_iterations: 5
+  │
+  └─ PERSON1_CONFIG
+      ├─ detector_path: ../person1/ai_detector.py
+      └─ available: auto-detected
+
+
+================================================================================
+                         END OF ARCHITECTURE
+================================================================================

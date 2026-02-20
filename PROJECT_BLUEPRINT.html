@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Integrity &amp; Authorship Intelligence Platform — Project Blueprint</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-2: #232733;
+            --border: #2e3345;
+            --text: #e2e4eb;
+            --text-muted: #9498a8;
+            --accent: #6c8cff;
+            --accent-dim: #3a4f8f;
+            --green: #4ade80;
+            --orange: #f59e0b;
+            --red: #f87171;
+            --code-bg: #161922;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* Header */
+        .hero {
+            text-align: center;
+            padding: 60px 0 48px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 48px;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #6c8cff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Sections */
+        .section {
+            margin-bottom: 56px;
+        }
+
+        .section-number {
+            display: inline-block;
+            background: var(--accent-dim);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 32px 0 14px;
+            color: var(--accent);
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 24px 0 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        a:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 0 0 16px 20px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        li::marker {
+            color: var(--accent);
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: var(--surface-2);
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(108, 140, 255, 0.04);
+        }
+
+        .dataset-name, .model-name {
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .shared-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--orange);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            color: #c4c9de;
+        }
+
+        p code {
+            background: var(--surface-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .comment { color: #6b7394; }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .symbol { color: #82aaff; }
+        .operator { color: #89ddff; }
+
+        /* Info cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 16px 0;
+        }
+
+        .card.highlight {
+            border-left: 3px solid var(--accent);
+        }
+
+        .card.warning {
+            border-left: 3px solid var(--orange);
+        }
+
+        /* Terminal mockup */
+        .terminal {
+            background: #0c0e14;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0 24px;
+        }
+
+        .terminal-bar {
+            background: var(--surface-2);
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+
+        .terminal-body {
+            padding: 20px 24px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: #a8b0c8;
+        }
+
+        .terminal-body .prompt { color: var(--green); }
+        .terminal-body .cmd { color: #fff; }
+        .terminal-body .output-header {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .terminal-body .output-value { color: var(--orange); }
+        .terminal-body .divider { color: #3a3f52; }
+
+        /* Module badges */
+        .module-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .module-badge.detection { background: rgba(108, 140, 255, 0.15); color: var(--accent); }
+        .module-badge.plagiarism { background: rgba(245, 158, 11, 0.15); color: var(--orange); }
+        .module-badge.humanization { background: rgba(74, 222, 128, 0.15); color: var(--green); }
+
+        /* Phase timeline */
+        .phase {
+            position: relative;
+            padding-left: 28px;
+            margin-bottom: 28px;
+        }
+
+        .phase::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 28px;
+            bottom: -28px;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .phase:last-child::before {
+            display: none;
+        }
+
+        .phase-dot {
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 3px solid var(--bg);
+        }
+
+        .phase-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+
+        .phase-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Progression steps */
+        .progression {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .progression .step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px 20px;
+        }
+
+        .progression .step-num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .progression .step-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .progression .step p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Summary table */
+        .summary-table td:first-child {
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+            width: 200px;
+        }
+
+        /* Divider */
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 48px 0;
+        }
+
+        /* Paper list */
+        .paper-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .paper-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .paper-list li:last-child {
+            border-bottom: none;
+        }
+
+        .paper-num {
+            display: inline-block;
+            background: var(--surface-2);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+
+        .paper-title {
+            font-weight: 500;
+        }
+
+        .paper-meta {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 1.6rem; }
+            .progression { grid-template-columns: 1fr; }
+            th, td { padding: 8px 10px; font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>Content Integrity &amp; Authorship Intelligence Platform</h1>
+        <p class="subtitle">Complete Project Blueprint — Reference Document</p>
+    </div>
+
+    <!-- SECTION 1 -->
+    <div class="section">
+        <span class="section-number">SECTION 1</span>
+        <h2>The Real-World Problem</h2>
+
+        <p>The internet is flooded with AI-generated content. Students submit AI-written essays. Professionals publish AI-drafted articles. Researchers pad papers with machine-generated paragraphs. Content mills produce thousands of AI blog posts daily. Meanwhile, plagiarism — copying from existing human sources — remains as widespread as ever.</p>
+
+        <p>The tools that exist today to deal with this are broken in three specific ways:</p>
+
+        <div class="card highlight">
+            <p><strong>AI Detection is unreliable.</strong> Tools like GPTZero, Originality.ai, and Turnitin's AI detector produce inconsistent results. They flag genuine human writing as AI-generated (false positives), miss sophisticated AI output (false negatives), and penalize non-native English speakers disproportionately. They operate as black boxes — no one can see how they reach their verdict. According to the RAID benchmark (ACL 2024), the best commercial detector achieved only 85% accuracy on base AI text, and accuracy drops sharply when adversarial techniques are applied.</p>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>Plagiarism detection hasn't evolved.</strong> Traditional plagiarism checkers rely on string matching and n-gram comparison against proprietary databases. They catch copy-paste plagiarism but struggle with paraphrase plagiarism — where someone rewrites a source just enough to avoid detection. Semantic plagiarism (same ideas, completely different words) is largely invisible to current tools.</p>
+        </div>
+
+        <div class="card highlight">
+            <p><strong>There is no unified system.</strong> AI detection and plagiarism detection are treated as separate problems by separate tools. A user must run content through multiple services, pay multiple subscriptions, and reconcile conflicting results. No single platform answers all three questions simultaneously:</p>
+            <ul>
+                <li>Was this written by AI?</li>
+                <li>Was this copied from an existing source?</li>
+                <li>Can this content be transformed into genuinely original, human-quality writing?</li>
+            </ul>
+        </div>
+
+        <p>This fragmentation creates confusion, mistrust, and a lack of accountability in how written content is evaluated.</p>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 2 -->
+    <div class="section">
+        <span class="section-number">SECTION 2</span>
+        <h2>The Vision — What This Project Solves</h2>
+
+        <p>This project builds a single, self-contained content intelligence platform with three integrated modules:</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Module</th><th>What It Does</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="module-badge detection">AI Detection</span></td>
+                        <td>Analyzes any text input and determines the percentage of AI-generated content. The goal is to detect AI involvement with the highest possible accuracy across all text formats, lengths, languages, and AI models.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="module-badge plagiarism">Plagiarism Detection</span></td>
+                        <td>Compares input text against reference sources to identify copied, paraphrased, or semantically duplicated content. Goes beyond surface-level string matching to catch meaning-level plagiarism.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="module-badge humanization">Humanization</span></td>
+                        <td>Takes AI-generated or flagged content and transforms it into naturally human-written text. The output should read as authentically human — with natural variation, imperfect structure, genuine reasoning flow, and stylistic personality. The transformed content should register as 0% AI on detection systems.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card warning">
+            <p><strong>The key insight:</strong> These three modules share a common semantic understanding layer. The same technology that understands text deeply enough to detect AI can also understand it deeply enough to detect plagiarism and to rewrite it meaningfully. By building all three on a shared foundation, the system is more accurate, more efficient, and more consistent than running three separate tools.</p>
+        </div>
+
+        <h3>What makes this different from existing tools</h3>
+        <ul>
+            <li>It is transparent — not a black box</li>
+            <li>It is self-built and self-trained — no dependency on third-party APIs</li>
+            <li>It combines detection and transformation in one pipeline</li>
+            <li>It works across text formats, lengths, and languages</li>
+            <li>It is designed to run locally, giving the user full control</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 3 -->
+    <div class="section">
+        <span class="section-number">SECTION 3</span>
+        <h2>Project Constraints — What You Must Do to Build This</h2>
+
+        <h3>Hardware Requirements</h3>
+        <ul>
+            <li>A machine with a dedicated GPU (minimum 8 GB VRAM for fine-tuning smaller models, 24 GB+ recommended for larger models like DIPPER or Mistral-7B)</li>
+            <li>At least 64 GB RAM for dataset processing</li>
+            <li>500 GB+ free storage for datasets, model weights, and checkpoints</li>
+            <li>If local hardware is insufficient, use cloud GPU instances (Google Colab Pro, AWS, RunPod, or Lambda Labs)</li>
+        </ul>
+
+        <h3>Software Requirements</h3>
+        <ul>
+            <li>Python 3.10+</li>
+            <li>PyTorch 2.0+ with CUDA support</li>
+            <li>Hugging Face Transformers library</li>
+            <li>Hugging Face Datasets library</li>
+            <li>Sentence-Transformers library</li>
+            <li>Datasketch library (for MinHash/LSH in plagiarism module)</li>
+            <li>scikit-learn (for evaluation metrics and meta-classifier)</li>
+            <li>NLTK or spaCy (for text preprocessing)</li>
+            <li>Weights &amp; Biases or TensorBoard (for tracking training runs)</li>
+        </ul>
+
+        <h3>Knowledge Prerequisites</h3>
+        <ul>
+            <li>Solid understanding of Python</li>
+            <li>Familiarity with transformer architecture (attention, tokenization, fine-tuning)</li>
+            <li>Understanding of classification vs. sequence-to-sequence tasks</li>
+            <li>Basic knowledge of training loops, loss functions, learning rate scheduling</li>
+            <li>Understanding of evaluation metrics: accuracy, precision, recall, F1, AUROC</li>
+        </ul>
+
+        <h3>Development Constraints</h3>
+        <ul>
+            <li>All models must be trained locally or on your own cloud instances — no API calls to OpenAI, Google, or Anthropic for inference</li>
+            <li>All datasets must be downloaded and stored locally</li>
+            <li>The system must work offline after training is complete</li>
+            <li>Build and test in terminal first before any UI/app development</li>
+            <li>Each module should be independently testable before integration</li>
+        </ul>
+
+        <h3>Ethical Constraints (to be enforced after project completion)</h3>
+        <ul>
+            <li>Rate limiting to prevent bulk abuse</li>
+            <li>Logging and audit trails for transformation requests</li>
+            <li>Content length limits per request</li>
+            <li>Terms of service prohibiting academic fraud</li>
+            <li>Optional: require users to demonstrate comprehension before transformation (quiz, summary, or explanation step)</li>
+        </ul>
+    </div>
+
+    <hr>
+</div>
+<div class="container">
+
+    <!-- SECTION 4 -->
+    <div class="section">
+        <span class="section-number">SECTION 4</span>
+        <h2>Datasets — All Three Divisions</h2>
+
+        <!-- Division 1 -->
+        <h3><span class="module-badge detection">Division 1</span> &nbsp;AI Detection Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Dataset</th><th>Description</th><th>Size</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="dataset-name">RAID</td>
+                        <td>The largest benchmark for AI text detection. Covers 11 LLMs, 11 genres, 12 adversarial attacks, 4 decoding strategies. Contains 10M+ documents with both human and machine-generated text.</td>
+                        <td>10M+ docs</td>
+                        <td><a href="https://github.com/liamdugan/raid" target="_blank">github.com/liamdugan/raid</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="dataset-name">HC3</td>
+                        <td>Human-ChatGPT Comparison Corpus. Paired dataset of human answers vs. ChatGPT answers on identical prompts. Covers finance, medicine, open QA, and Wikipedia.</td>
+                        <td>~40K QA pairs</td>
+                        <td><a href="https://huggingface.co/datasets/Hello-SimpleAI/HC3" target="_blank">huggingface.co/.../HC3</a></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="dataset-name">M4</td>
+                        <td>Multi-generator, Multi-domain, Multi-lingual. Covers text from multiple LLMs (ChatGPT, LLaMA, etc.), multiple domains, and multiple languages. Critical for generalization.</td>
+                        <td>Multi-million</td>
+                        <td><a href="https://github.com/mbzuai-nlp/M4" target="_blank">github.com/mbzuai-nlp/M4</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="dataset-name">OpenAI GPT-2 Output</td>
+                        <td>250K human-written + 250K generated samples per GPT-2 model size. Includes top-k sampling variants. Older but useful as baseline training data.</td>
+                        <td>1.5M+ samples</td>
+                        <td><a href="https://github.com/openai/gpt-2-output-dataset" target="_blank">github.com/openai/gpt-2-output-dataset</a></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="dataset-name">FAIDSet <small>(2025)</small></td>
+                        <td>Multilingual, multi-domain, multi-generator dataset supporting fine-grained detection — classifies text as fully human, fully AI, or mixed.</td>
+                        <td>Large-scale</td>
+                        <td><a href="https://arxiv.org/abs/2505.14271" target="_blank">arxiv.org/abs/2505.14271</a></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="dataset-name">PAN Author ID Corpora</td>
+                        <td>Stylometry and authorship verification datasets spanning multiple years of shared tasks. Essential for understanding human writing patterns and behavior.</td>
+                        <td>Varies by year</td>
+                        <td><a href="https://pan.webis.de/data.html" target="_blank">pan.webis.de/data.html</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Division 2 -->
+        <h3><span class="module-badge plagiarism">Division 2</span> &nbsp;Plagiarism Detection Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Dataset</th><th>Description</th><th>Size</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="dataset-name">PAN Plagiarism Corpora <small>(2009–2015)</small></td>
+                        <td>The gold standard for plagiarism research. Includes copy-paste, paraphrase, cross-lingual plagiarism, and source retrieval tasks with full annotations.</td>
+                        <td>Thousands of pairs</td>
+                        <td><a href="https://pan.webis.de/clef.html" target="_blank">pan.webis.de/clef.html</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="dataset-name">Clough &amp; Stevenson</td>
+                        <td>Academic plagiarism cases annotated at four levels: near-copy, light revision, heavy revision, and non-plagiarism. Small but high-quality.</td>
+                        <td>~100 docs</td>
+                        <td>Search: "Clough Stevenson 2011 plagiarism corpus"</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="dataset-name">Webis Crowd Paraphrase 2011</td>
+                        <td>Crowdsourced paraphrases with plagiarism annotations. Directly targets the paraphrase-plagiarism detection problem.</td>
+                        <td>~4K pairs</td>
+                        <td><a href="https://webis.de/data.html" target="_blank">webis.de/data</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="dataset-name">WikiSplit</td>
+                        <td>1 million sentence splits from Wikipedia. Useful for detecting when someone restructures a source by splitting or merging sentences to disguise copying.</td>
+                        <td>1M pairs</td>
+                        <td><a href="https://github.com/google-research-datasets/wiki-split" target="_blank">github.com/.../wiki-split</a></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="dataset-name">STS Benchmark <span class="shared-badge">SHARED</span></td>
+                        <td>Semantic textual similarity scores on a continuous 0–5 scale. Used to define the threshold: "how similar is too similar?"</td>
+                        <td>~8.6K pairs</td>
+                        <td><a href="https://ixa2.si.ehu.eus/stswiki/index.php/STSbenchmark" target="_blank">ixa2.si.ehu.eus/stswiki</a></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="dataset-name">PAWS <span class="shared-badge">SHARED</span></td>
+                        <td>Adversarial paraphrase pairs that look different on the surface but mean the same thing (and vice versa). Trains the system to catch disguised copying.</td>
+                        <td>~108K pairs</td>
+                        <td><a href="https://github.com/google-research-datasets/paws" target="_blank">github.com/.../paws</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Division 3 -->
+        <h3><span class="module-badge humanization">Division 3</span> &nbsp;Humanization (Content Transformation) Datasets</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Dataset</th><th>Description</th><th>Size</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="dataset-name">ParaNMT-50M</td>
+                        <td>50 million paraphrase pairs generated via back-translation. Massive scale for pretraining a paraphrase/rewriting model.</td>
+                        <td>50M pairs</td>
+                        <td><a href="https://github.com/jwieting/para-nmt-50m" target="_blank">github.com/jwieting/para-nmt-50m</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="dataset-name">PAWS <span class="shared-badge">SHARED</span></td>
+                        <td>Adversarial paraphrase pairs. Teaches the rewriter to make non-trivial transformations, not just synonym swaps.</td>
+                        <td>~108K pairs</td>
+                        <td><a href="https://github.com/google-research-datasets/paws" target="_blank">github.com/.../paws</a></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="dataset-name">QQP</td>
+                        <td>Quora Question Pairs. 400K+ sentence pairs labeled for semantic equivalence. Trains the model to understand meaning-preserving transformations.</td>
+                        <td>400K+ pairs</td>
+                        <td><a href="https://www.kaggle.com/c/quora-question-pairs" target="_blank">kaggle.com/.../quora-question-pairs</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="dataset-name">STS Benchmark <span class="shared-badge">SHARED</span></td>
+                        <td>Continuous similarity scores. Used to evaluate whether the rewriter preserves the original meaning after transformation.</td>
+                        <td>~8.6K pairs</td>
+                        <td><a href="https://ixa2.si.ehu.eus/stswiki/index.php/STSbenchmark" target="_blank">ixa2.si.ehu.eus/stswiki</a></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="dataset-name">MRPC</td>
+                        <td>Microsoft Research Paraphrase Corpus. High-quality paraphrase pairs from news articles. Good for fine-tuning on formal/professional text rewriting.</td>
+                        <td>~5.8K pairs</td>
+                        <td><a href="https://www.microsoft.com/en-us/download/details.aspx?id=52398" target="_blank">microsoft.com/download</a></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="dataset-name">BEA-2019 GEC</td>
+                        <td>Grammatical error correction data. Used to teach the rewriter to introduce natural human imperfections — because real humans make small grammatical variations that AI does not.</td>
+                        <td>Large-scale</td>
+                        <td><a href="https://www.cl.cam.ac.uk/research/nl/bea2019st/" target="_blank">cl.cam.ac.uk/.../bea2019st</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 5 -->
+    <div class="section">
+        <span class="section-number">SECTION 5</span>
+        <h2>Models — All Three Divisions</h2>
+
+        <!-- Division 1 -->
+        <h3><span class="module-badge detection">Division 1</span> &nbsp;AI Detection Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Model</th><th>Role</th><th>Params</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="model-name">DeBERTa-v3-large</td>
+                        <td>Primary classifier backbone. Best-in-class for text classification. Fine-tune as the main AI detection head.</td>
+                        <td>304M</td>
+                        <td><a href="https://huggingface.co/microsoft/deberta-v3-large" target="_blank">huggingface.co/.../deberta-v3-large</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="model-name">RoBERTa-large</td>
+                        <td>Secondary classifier. OpenAI's own GPT-2 detector was built on this. Use as an ensemble member alongside DeBERTa.</td>
+                        <td>355M</td>
+                        <td><a href="https://huggingface.co/roberta-large" target="_blank">huggingface.co/roberta-large</a></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="model-name">Longformer-base</td>
+                        <td>Long document classifier. Handles up to 4,096 tokens. Essential for essays, articles, and research papers that exceed BERT's 512-token limit.</td>
+                        <td>149M</td>
+                        <td><a href="https://huggingface.co/allenai/longformer-base-4096" target="_blank">huggingface.co/.../longformer-base-4096</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="model-name">XLM-RoBERTa-large</td>
+                        <td>Multilingual detection. Supports 100+ languages. Required if the system must detect AI text in non-English content.</td>
+                        <td>560M</td>
+                        <td><a href="https://huggingface.co/xlm-roberta-large" target="_blank">huggingface.co/xlm-roberta-large</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Division 2 -->
+        <h3><span class="module-badge plagiarism">Division 2</span> &nbsp;Plagiarism Detection Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Model</th><th>Role</th><th>Params</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="model-name">Sentence-BERT <small>(all-mpnet-base-v2)</small></td>
+                        <td>Sentence embedding engine. Converts text into vectors. High cosine similarity = potential plagiarism. Primary similarity engine.</td>
+                        <td>109M</td>
+                        <td><a href="https://huggingface.co/sentence-transformers/all-mpnet-base-v2" target="_blank">huggingface.co/.../all-mpnet-base-v2</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="model-name">DeBERTa-v3 Cross-Encoder <span class="shared-badge">SHARED</span></td>
+                        <td>Takes two text passages as input and directly scores their similarity. More accurate than embedding comparison. Used as the verification step.</td>
+                        <td>304M</td>
+                        <td><a href="https://huggingface.co/cross-encoder/nli-deberta-v3-large" target="_blank">huggingface.co/.../nli-deberta-v3-large</a></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="model-name">SimCSE</td>
+                        <td>Contrastive learning framework for sentence embeddings. Produces better similarity representations than vanilla Sentence-BERT.</td>
+                        <td>~110M</td>
+                        <td><a href="https://github.com/princeton-nlp/SimCSE" target="_blank">github.com/princeton-nlp/SimCSE</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="model-name">Longformer <span class="shared-badge">SHARED</span></td>
+                        <td>Document-level comparison for long texts. Compares full essays or papers, not just individual sentences.</td>
+                        <td>149M</td>
+                        <td><a href="https://huggingface.co/allenai/longformer-base-4096" target="_blank">huggingface.co/.../longformer-base-4096</a></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="model-name">MinHash / LSH <small>(algorithmic)</small></td>
+                        <td>Fast approximate duplicate detection. First-pass filter that quickly identifies candidate matches before running expensive neural comparisons.</td>
+                        <td>N/A</td>
+                        <td><a href="https://github.com/ekzhu/datasketch" target="_blank">github.com/ekzhu/datasketch</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Division 3 -->
+        <h3><span class="module-badge humanization">Division 3</span> &nbsp;Humanization (Content Transformation) Models</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Model</th><th>Role</th><th>Params</th><th>Source</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="model-name">DIPPER <small>(Discourse Paraphraser)</small></td>
+                        <td>Purpose-built paragraph-level paraphraser with control knobs for lexical diversity and content reordering. The most directly relevant model for humanization.</td>
+                        <td>11B</td>
+                        <td><a href="https://huggingface.co/kalpeshk2011/dipper-paraphraser-xxl" target="_blank">huggingface.co/.../dipper-paraphraser-xxl</a></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="model-name">Flan-T5-XL</td>
+                        <td>Encoder-decoder model excellent for controlled text generation. Fine-tune on paraphrase datasets for high-quality rewriting.</td>
+                        <td>3B</td>
+                        <td><a href="https://huggingface.co/google/flan-t5-xl" target="_blank">huggingface.co/google/flan-t5-xl</a></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="model-name">PEGASUS-large</td>
+                        <td>Designed for abstractive summarization — essentially rewriting with compression. Learns to restructure ideas, not just swap words.</td>
+                        <td>568M</td>
+                        <td><a href="https://huggingface.co/google/pegasus-large" target="_blank">huggingface.co/google/pegasus-large</a></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="model-name">Mistral-7B</td>
+                        <td>Open-weight generative model. Fine-tune with LoRA/QLoRA on paraphrase data for a powerful local rewriter.</td>
+                        <td>7B</td>
+                        <td><a href="https://huggingface.co/mistralai/Mistral-7B-v0.3" target="_blank">huggingface.co/.../Mistral-7B-v0.3</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 6 -->
+    <div class="section">
+        <span class="section-number">SECTION 6</span>
+        <h2>Dataset-to-Model Mapping — What Trains What</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Model</th><th>Trained On (Datasets)</th><th>Task</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="model-name">DeBERTa-v3-large</td>
+                        <td>RAID, HC3, M4, FAIDSet</td>
+                        <td>Binary / fine-grained AI detection classification</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">RoBERTa-large</td>
+                        <td>RAID, HC3, OpenAI GPT-2 Output Dataset</td>
+                        <td>AI detection (ensemble member)</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Longformer-base</td>
+                        <td>RAID (long documents), PAN Plagiarism Corpora</td>
+                        <td>Long-document AI detection + plagiarism comparison</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">XLM-RoBERTa-large</td>
+                        <td>M4 (multilingual split), FAIDSet</td>
+                        <td>Multilingual AI detection</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Sentence-BERT</td>
+                        <td>STS Benchmark, PAWS, QQP</td>
+                        <td>Sentence embedding for plagiarism similarity scoring</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">SimCSE</td>
+                        <td>STS Benchmark, PAWS, ParaNMT-50M (subset)</td>
+                        <td>Improved sentence embeddings for plagiarism</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">DeBERTa-v3 Cross-Encoder</td>
+                        <td>STS Benchmark, PAWS, MRPC, PAN Plagiarism Corpora</td>
+                        <td>Pairwise plagiarism verification</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">MinHash / LSH</td>
+                        <td>PAN Plagiarism Corpora, WikiSplit</td>
+                        <td>Fast first-pass duplicate screening (algorithmic — no training)</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">DIPPER</td>
+                        <td>ParaNMT-50M, PAWS</td>
+                        <td>Paragraph-level paraphrasing for humanization</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Flan-T5-XL</td>
+                        <td>ParaNMT-50M, QQP, MRPC, BEA-2019 GEC</td>
+                        <td>Controlled rewriting and humanization</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">PEGASUS-large</td>
+                        <td>ParaNMT-50M (subset), MRPC</td>
+                        <td>Abstractive rewriting and restructuring</td>
+                    </tr>
+                    <tr>
+                        <td class="model-name">Mistral-7B (LoRA)</td>
+                        <td>ParaNMT-50M, PAWS, QQP, BEA-2019 GEC</td>
+                        <td>Full humanization with style variation</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 7 -->
+    <div class="section">
+        <span class="section-number">SECTION 7</span>
+        <h2>How to Use These Models with These Datasets</h2>
+
+        <h3><span class="module-badge detection">AI Detection Module</span> &nbsp;How the pieces connect</h3>
+        <p>The AI detection models are all <strong>classification models</strong>. They take a piece of text as input and output a label: "human" or "AI" (or a probability score between 0 and 1).</p>
+
+        <div class="card">
+            <h4>Step 1: Prepare the data</h4>
+            <p>Each dataset (RAID, HC3, M4, etc.) contains text samples labeled as human-written or AI-generated. Combine them into a unified format: <code>{"text": "...", "label": 0 or 1}</code> where 0 = human and 1 = AI. Split into training (80%), validation (10%), and test (10%) sets.</p>
+        </div>
+        <div class="card">
+            <h4>Step 2: Tokenize</h4>
+            <p>Each model has its own tokenizer. Run the text through the model's tokenizer to convert words into token IDs. For DeBERTa and RoBERTa, the maximum input length is 512 tokens — truncate or chunk longer texts. For Longformer, the limit is 4,096 tokens.</p>
+        </div>
+        <div class="card">
+            <h4>Step 3: Fine-tune</h4>
+            <p>Load the pretrained model, add a classification head (a single linear layer on top), and train it on your labeled data. The model learns to distinguish AI patterns from human patterns in the text.</p>
+        </div>
+        <div class="card">
+            <h4>Step 4: Ensemble</h4>
+            <p>After training each model separately, combine their predictions. For any input text, run it through all trained detectors and use a meta-classifier (a simple logistic regression or weighted vote) to produce the final AI probability score.</p>
+        </div>
+
+        <h3><span class="module-badge plagiarism">Plagiarism Detection Module</span> &nbsp;How the pieces connect</h3>
+        <p>Plagiarism detection is a <strong>similarity problem</strong>, not a classification problem. You are comparing an input document against a collection of reference documents.</p>
+
+        <div class="card">
+            <h4>Step 1: Build a reference index</h4>
+            <p>Take your reference corpus (PAN documents, or any collection of source texts). Run each document through MinHash to create a fingerprint. Store these fingerprints in an LSH index for fast lookup.</p>
+        </div>
+        <div class="card">
+            <h4>Step 2: First-pass screening</h4>
+            <p>When a new document comes in, compute its MinHash fingerprint and query the LSH index. This returns candidate documents that are approximately similar — fast but rough.</p>
+        </div>
+        <div class="card">
+            <h4>Step 3: Sentence-level comparison</h4>
+            <p>For each candidate match, break both documents into sentences. Encode each sentence using Sentence-BERT or SimCSE. Compute cosine similarity between all sentence pairs. Flag pairs above a threshold (e.g., 0.85) as potential plagiarism.</p>
+        </div>
+        <div class="card">
+            <h4>Step 4: Verification</h4>
+            <p>For flagged sentence pairs, run them through the DeBERTa cross-encoder for precise similarity scoring. This catches paraphrase plagiarism that embedding comparison might miss.</p>
+        </div>
+        <div class="card">
+            <h4>Step 5: Report</h4>
+            <p>Output a plagiarism report showing which sentences match, what sources they match against, and the similarity scores.</p>
+        </div>
+
+        <h3><span class="module-badge humanization">Humanization Module</span> &nbsp;How the pieces connect</h3>
+        <p>Humanization is a <strong>sequence-to-sequence generation problem</strong>. The model takes AI-generated text as input and produces rewritten human-like text as output.</p>
+
+        <div class="card">
+            <h4>Step 1: Prepare parallel data</h4>
+            <p>From your paraphrase datasets (ParaNMT, PAWS, QQP), create input-output pairs where the input is one version and the output is the paraphrased version. Additionally, generate AI text using any available LLM, then pair it with human-written equivalents from HC3.</p>
+        </div>
+        <div class="card">
+            <h4>Step 2: Fine-tune the rewriter</h4>
+            <p>Load DIPPER, Flan-T5, or Mistral-7B. Fine-tune on the parallel data so the model learns to transform text while preserving meaning. For Mistral-7B, use LoRA (Low-Rank Adaptation) to make fine-tuning feasible on consumer hardware.</p>
+        </div>
+        <div class="card">
+            <h4>Step 3: Add quality signals</h4>
+            <p>Use the BEA-2019 GEC data to teach the model that human text contains natural imperfections. Use STS Benchmark to evaluate that the rewritten text still means the same thing as the original.</p>
+        </div>
+        <div class="card">
+            <h4>Step 4: Feedback loop</h4>
+            <p>After the rewriter produces output, run that output through your own AI detection module (Module 1). If it still scores as AI-generated, feed it back through the rewriter with adjusted parameters (higher lexical diversity, more reordering). Repeat until the detection score drops below your target threshold.</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 8 -->
+    <div class="section">
+        <span class="section-number">SECTION 8</span>
+        <h2>How to Train — Step-by-Step Process</h2>
+        <p>Assuming you have downloaded all datasets and have your code ready:</p>
+
+        <!-- Phase 1 -->
+        <div class="phase">
+            <div class="phase-dot"></div>
+            <div class="phase-title">Phase 1: Data Preparation <span class="phase-time">— 1–2 weeks</span></div>
+            <ol>
+                <li>Download all datasets listed in Section 4 to a local directory structure</li>
+                <li>Write preprocessing scripts to convert each dataset into a unified JSON Lines format</li>
+                <li>For classification datasets: <code>{"text": "...", "label": 0/1}</code></li>
+                <li>For paraphrase datasets: <code>{"input": "...", "output": "..."}</code></li>
+                <li>For similarity datasets: <code>{"text_a": "...", "text_b": "...", "score": 0.0–1.0}</code></li>
+                <li>Clean the data: remove duplicates, handle encoding issues, filter out extremely short or long samples</li>
+                <li>Create train/validation/test splits (80/10/10) with stratification</li>
+            </ol>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="phase">
+            <div class="phase-dot"></div>
+            <div class="phase-title">Phase 2: Train AI Detection Models <span class="phase-time">— 2–3 weeks</span></div>
+            <ol>
+                <li>Start with DeBERTa-v3-large — this is your primary detector</li>
+                <li>Load the pretrained model from Hugging Face</li>
+                <li>Add a binary classification head</li>
+                <li>Training configuration:
+                    <ul>
+                        <li>Learning rate: 2e-5 (start here, adjust based on validation loss)</li>
+                        <li>Batch size: 16 (or 8 with gradient accumulation if GPU memory is limited)</li>
+                        <li>Epochs: 3–5 (transformers overfit quickly — monitor validation loss)</li>
+                        <li>Optimizer: AdamW with weight decay 0.01</li>
+                        <li>Scheduler: Linear warmup for 10% of steps, then linear decay</li>
+                    </ul>
+                </li>
+                <li>Train on the combined RAID + HC3 + M4 dataset</li>
+                <li>Evaluate on the held-out test set — measure accuracy, F1, precision, recall, and AUROC</li>
+                <li>Repeat for RoBERTa-large and Longformer with the same process</li>
+                <li>Train the meta-classifier (logistic regression) on the combined predictions of all three models</li>
+            </ol>
+
+            <h4>Algorithm — Ensemble Meta-Classifier</h4>
+            <pre><code><span class="keyword">For each</span> input text T:
+    score_1 = <span class="symbol">DeBERTa</span>(T)        <span class="comment">→ probability of AI</span>
+    score_2 = <span class="symbol">RoBERTa</span>(T)        <span class="comment">→ probability of AI</span>
+    score_3 = <span class="symbol">Longformer</span>(T)     <span class="comment">→ probability of AI (for long texts)</span>
+
+    final_score = <span class="symbol">MetaClassifier</span>(score_1, score_2, score_3)
+
+    <span class="keyword">if</span> final_score <span class="operator">&gt;</span> threshold:
+        label = <span class="string">"AI-generated"</span>
+    <span class="keyword">else</span>:
+        label = <span class="string">"Human-written"</span></code></pre>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="phase">
+            <div class="phase-dot"></div>
+            <div class="phase-title">Phase 3: Train Plagiarism Detection Models <span class="phase-time">— 1–2 weeks</span></div>
+            <ol>
+                <li>Fine-tune Sentence-BERT on STS Benchmark + PAWS using contrastive loss</li>
+                <li>Fine-tune SimCSE on the same data using the SimCSE training procedure (unsupervised + supervised)</li>
+                <li>Fine-tune the DeBERTa cross-encoder on PAWS + MRPC + PAN pairs as a pairwise classifier</li>
+                <li>Build the MinHash/LSH index from PAN Plagiarism Corpora — this requires no training, just implementation</li>
+                <li>Evaluate on PAN test sets using the standard PAN evaluation metrics (precision, recall at character level)</li>
+            </ol>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="phase">
+            <div class="phase-dot"></div>
+            <div class="phase-title">Phase 4: Train Humanization Models <span class="phase-time">— 2–4 weeks</span></div>
+            <ol>
+                <li>Start with Flan-T5-XL — it is the most straightforward to fine-tune for seq2seq tasks</li>
+                <li>Prepare input-output pairs from ParaNMT-50M (sample a manageable subset — 1M to 5M pairs)</li>
+                <li>Fine-tune with:
+                    <ul>
+                        <li>Learning rate: 1e-4</li>
+                        <li>Batch size: 8 (with gradient accumulation)</li>
+                        <li>Epochs: 2–3</li>
+                        <li>Max input length: 512 tokens</li>
+                        <li>Max output length: 512 tokens</li>
+                    </ul>
+                </li>
+                <li>For Mistral-7B, use QLoRA:
+                    <ul>
+                        <li>LoRA rank: 16–64</li>
+                        <li>LoRA alpha: 32–128</li>
+                        <li>Target modules: all attention layers</li>
+                        <li>4-bit quantization to fit in consumer GPU memory</li>
+                    </ul>
+                </li>
+                <li>For DIPPER, the model is already pretrained for paraphrasing — fine-tune lightly on your specific data or use it as-is with its control knobs (lexical diversity: 0–100, order diversity: 0–100)</li>
+                <li>After training, run the output through your AI detection module and measure the detection rate. Iterate.</li>
+            </ol>
+
+            <h4>Algorithm — Humanization with Feedback Loop</h4>
+            <pre><code><span class="keyword">For each</span> AI-generated input text T:
+    rewritten = <span class="symbol">Humanizer</span>(T, diversity=<span class="string">60</span>, reorder=<span class="string">40</span>)
+    ai_score  = <span class="symbol">AIDetector</span>(rewritten)
+
+    <span class="keyword">while</span> ai_score <span class="operator">&gt;</span> target_threshold:
+        diversity <span class="operator">+=</span> <span class="string">10</span>
+        reorder   <span class="operator">+=</span> <span class="string">10</span>
+        rewritten = <span class="symbol">Humanizer</span>(T, diversity, reorder)
+        ai_score  = <span class="symbol">AIDetector</span>(rewritten)
+
+        <span class="keyword">if</span> diversity <span class="operator">&gt;</span> <span class="string">100</span>:
+            <span class="keyword">break</span>  <span class="comment">→ maximum transformation reached</span>
+
+    output = rewritten</code></pre>
+        </div>
+
+        <!-- Phase 5 -->
+        <div class="phase">
+            <div class="phase-dot"></div>
+            <div class="phase-title">Phase 5: Integration <span class="phase-time">— 1 week</span></div>
+            <ol>
+                <li>Connect all three modules into a single pipeline</li>
+                <li>Input text flows through: AI Detection → Plagiarism Check → (if needed) Humanization</li>
+                <li>Output: a comprehensive report with AI score, plagiarism matches, and optionally the humanized version</li>
+            </ol>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 9 -->
+    <div class="section">
+        <span class="section-number">SECTION 9</span>
+        <h2>How to Execute the Project</h2>
+
+        <h3>Stage 1: Terminal Execution (First Milestone)</h3>
+        <p>Once all models are trained and saved, the project runs as a command-line tool. The user runs a Python script from the terminal (VSCode terminal, macOS Terminal, or any terminal). They provide input text either as a string argument, a file path, or piped from stdin.</p>
+
+        <div class="terminal">
+            <div class="terminal-bar">
+                <div class="terminal-dot red"></div>
+                <div class="terminal-dot yellow"></div>
+                <div class="terminal-dot green"></div>
+            </div>
+            <div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">python main.py --input "paste your text here"</span>
+
+<span class="divider">═══════════════════════════════════════════════════════</span>
+  <span class="output-header">CONTENT ANALYSIS REPORT</span>
+<span class="divider">═══════════════════════════════════════════════════════</span>
+
+  AI Detection Score:        <span class="output-value">87.3% AI-generated</span>
+  Plagiarism Score:          <span class="output-value">12.1% matched content</span>
+  Sources Found:             <span class="output-value">2 matches</span>
+
+  Matched Sources:
+    1. [Source A] — 8.4% similarity (sentences 3, 7, 12)
+    2. [Source B] — 3.7% similarity (sentence 19)
+
+<span class="divider">═══════════════════════════════════════════════════════</span>
+
+<span class="prompt">$</span> <span class="cmd">python main.py --input "paste your text here" --humanize</span>
+
+  Humanized Output:
+  [transformed text appears here]
+
+  Post-Humanization AI Score: <span class="output-value">2.1%</span>
+
+<span class="divider">═══════════════════════════════════════════════════════</span>
+            </div>
+        </div>
+
+        <h4>What to validate in terminal stage</h4>
+        <ul>
+            <li>AI detection accuracy on your test set (target: 95%+ on clean text)</li>
+            <li>Plagiarism detection precision and recall on PAN test data</li>
+            <li>Humanization quality: run output through your own detector AND through external detectors (GPTZero, Originality.ai) to verify</li>
+            <li>Processing speed: measure time per document</li>
+            <li>Memory usage: ensure it runs within your hardware limits</li>
+        </ul>
+
+        <h4>Terminal stage is complete when</h4>
+        <ul>
+            <li>All three modules produce consistent, reliable results</li>
+            <li>The pipeline handles edge cases (very short text, very long text, mixed content, non-English text)</li>
+            <li>Processing time is acceptable (under 30 seconds for a typical essay)</li>
+        </ul>
+
+        <h3>Stage 2: Application Development (After Terminal Works Perfectly)</h3>
+        <p>Once the terminal version is stable and validated, move to building a user-facing application.</p>
+
+        <div class="progression">
+            <div class="step">
+                <div class="step-num">STEP 1 — RECOMMENDED FIRST</div>
+                <div class="step-title">Web Application</div>
+                <p>Build a simple web interface using Flask or FastAPI (backend) + React or plain HTML/CSS/JS (frontend). User pastes text, clicks "Analyze," and sees the report. Add a "Humanize" button. Fastest path to a usable product.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">STEP 2 — OPTIONAL</div>
+                <div class="step-title">Desktop Application</div>
+                <p>Package the web app as a desktop app using Electron or Tauri. Runs locally, no internet required after installation. Good for users who want privacy and offline access.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">STEP 3 — FOR INTEGRATION</div>
+                <div class="step-title">API Service</div>
+                <p>Wrap the pipeline in a REST API using FastAPI. Other applications can send text and receive analysis results. This is the path toward a SaaS product.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">STEP 4 — LATER STAGE</div>
+                <div class="step-title">Mobile Application</div>
+                <p>Build a mobile frontend that connects to your API backend. React Native or Flutter for cross-platform. Only pursue this after the web version is stable.</p>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 10 -->
+    <div class="section">
+        <span class="section-number">SECTION 10</span>
+        <h2>Complete Project Summary</h2>
+
+        <div class="table-wrap">
+            <table class="summary-table">
+                <tbody>
+                    <tr><td>Project Name</td><td>Content Integrity &amp; Authorship Intelligence Platform</td></tr>
+                    <tr><td>Core Problem</td><td>AI-generated content is undetectable, plagiarism tools are outdated, and no unified system exists to handle both detection and transformation</td></tr>
+                    <tr><td>Solution</td><td>A three-module system: AI Detection + Plagiarism Detection + Content Humanization, built on a shared semantic backbone</td></tr>
+                    <tr><td>Total Datasets</td><td>18 datasets across three divisions (6 for AI detection, 6 for plagiarism, 6 for humanization — with some shared)</td></tr>
+                    <tr><td>Total Models</td><td>13 models across three divisions (4 for AI detection, 5 for plagiarism, 4 for humanization — with some shared)</td></tr>
+                    <tr><td>Training Time</td><td>6–10 weeks total (data prep + training all modules + integration)</td></tr>
+                    <tr><td>First Deliverable</td><td>Terminal-based CLI tool that analyzes and transforms text</td></tr>
+                    <tr><td>Second Deliverable</td><td>Web application with a user interface</td></tr>
+                    <tr><td>Hardware Needed</td><td>GPU with 24 GB+ VRAM (or cloud GPU), 64 GB RAM, 500 GB storage</td></tr>
+                    <tr><td>Key Differentiator</td><td>Self-built, self-trained, transparent, offline-capable, combines detection and transformation in one system</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECTION 11 -->
+    <div class="section">
+        <span class="section-number">SECTION 11</span>
+        <h2>Research Papers — Complete Reference List</h2>
+
+        <h3><span class="module-badge detection">AI Detection Papers</span></h3>
+        <ul class="paper-list">
+            <li>
+                <span class="paper-num">1</span>
+                <span class="paper-title">"RAID: A Shared Benchmark for Robust Evaluation of Machine-Generated Text Detectors"</span><br>
+                <span class="paper-meta">Dugan et al., ACL 2024 — <a href="https://arxiv.org/abs/2405.07940" target="_blank">arxiv.org/abs/2405.07940</a></span>
+            </li>
+            <li>
+                <span class="paper-num">2</span>
+                <span class="paper-title">"On the Reliability of AI-Text Detectors"</span><br>
+                <span class="paper-meta">2023 — <a href="https://arxiv.org/abs/2304.02819" target="_blank">arxiv.org/abs/2304.02819</a></span>
+            </li>
+            <li>
+                <span class="paper-num">3</span>
+                <span class="paper-title">"Detecting Machine-Generated Text: A Critical Survey"</span><br>
+                <span class="paper-meta">2023 — <a href="https://arxiv.org/abs/2303.07205" target="_blank">arxiv.org/abs/2303.07205</a></span>
+            </li>
+            <li>
+                <span class="paper-num">4</span>
+                <span class="paper-title">"M4: Multi-generator, Multi-domain, Multi-lingual Black-Box MGT Detection"</span><br>
+                <span class="paper-meta">Wang et al., 2024 — <a href="https://arxiv.org/abs/2305.14902" target="_blank">arxiv.org/abs/2305.14902</a></span>
+            </li>
+            <li>
+                <span class="paper-num">5</span>
+                <span class="paper-title">"Fine-grained AI-generated Text Detection using Multi-task Auxiliary and Multi-level Contrastive Learning"</span><br>
+                <span class="paper-meta">2025 — <a href="https://arxiv.org/abs/2505.14271" target="_blank">arxiv.org/abs/2505.14271</a></span>
+            </li>
+        </ul>
+
+        <h3><span class="module-badge plagiarism">Plagiarism Detection Papers</span></h3>
+        <ul class="paper-list">
+            <li>
+                <span class="paper-num">6</span>
+                <span class="paper-title">"A Survey on Plagiarism Detection"</span><br>
+                <span class="paper-meta">Foltýnek et al., 2019 — <a href="https://arxiv.org/abs/1703.05546" target="_blank">arxiv.org/abs/1703.05546</a></span>
+            </li>
+            <li>
+                <span class="paper-num">7</span>
+                <span class="paper-title">"Semantic Plagiarism Detection Using Transformer Models"</span><br>
+                <span class="paper-meta">2024 — <a href="https://ceur-ws.org/Vol-4038/paper_324.pdf" target="_blank">ceur-ws.org/Vol-4038/paper_324.pdf</a></span>
+            </li>
+            <li>
+                <span class="paper-num">8</span>
+                <span class="paper-title">"Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"</span><br>
+                <span class="paper-meta">Reimers &amp; Gurevych, 2019 — <a href="https://arxiv.org/abs/1908.10084" target="_blank">arxiv.org/abs/1908.10084</a></span>
+            </li>
+            <li>
+                <span class="paper-num">9</span>
+                <span class="paper-title">"SimCSE: Simple Contrastive Learning of Sentence Embeddings"</span><br>
+                <span class="paper-meta">Gao et al., 2021 — <a href="https://arxiv.org/abs/2104.08821" target="_blank">arxiv.org/abs/2104.08821</a></span>
+            </li>
+        </ul>
+
+        <h3><span class="module-badge humanization">Humanization &amp; Paraphrasing Papers</span></h3>
+        <ul class="paper-list">
+            <li>
+                <span class="paper-num">10</span>
+                <span class="paper-title">"Paraphrasing evades detectors of AI-generated text, but retrieval is an effective defense"</span> (DIPPER paper)<br>
+                <span class="paper-meta">Krishna et al., 2023 — <a href="https://arxiv.org/abs/2303.13408" target="_blank">arxiv.org/abs/2303.13408</a></span>
+            </li>
+            <li>
+                <span class="paper-num">11</span>
+                <span class="paper-title">"Authorship Style Transfer with Policy Optimization"</span><br>
+                <span class="paper-meta">2024 — <a href="https://arxiv.org/abs/2403.08043" target="_blank">arxiv.org/abs/2403.08043</a></span>
+            </li>
+            <li>
+                <span class="paper-num">12</span>
+                <span class="paper-title">"Paraphrase Generation: A Survey"</span><br>
+                <span class="paper-meta">2022 — <a href="https://arxiv.org/abs/2206.05233" target="_blank">arxiv.org/abs/2206.05233</a></span>
+            </li>
+            <li>
+                <span class="paper-num">13</span>
+                <span class="paper-title">"Distilling Text Style Transfer with Self-Explanation from LLMs"</span><br>
+                <span class="paper-meta">2024 — <a href="https://arxiv.org/abs/2403.08043" target="_blank">arxiv.org/abs/2403.08043</a></span>
+            </li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>This document serves as the complete project blueprint. All datasets, models, training procedures, execution steps, and references are contained within this single document. No external dependencies or API calls are required — everything is built, trained, and run locally.</p>
+    </div>
+
+</div>
+</body>
+</html>
