@@ -59,18 +59,26 @@ def deduplicate(records: list[dict], key: str = "text") -> list[dict]:
 # ─── Dataset-Specific Processors ─────────────────────────
 
 def process_raid(raw_path: Path) -> list[dict]:
-    """Process RAID dataset into classification format."""
+    """Process RAID dataset into classification format.
+    RAID is huge (7M+ records). We cap at 500K to avoid OOM."""
+    MAX_RECORDS = 500_000
     records = []
     try:
         ds = load_from_disk(str(raw_path))
         for split_name in ds:
+            if len(records) >= MAX_RECORDS:
+                break
             for row in tqdm(ds[split_name], desc=f"RAID/{split_name}"):
                 text = clean_text(row.get("generation", row.get("text", "")))
-                # RAID labels: 'human' or model name
                 is_human = row.get("model", "") == "human" or row.get("label", 1) == 0
                 label = 0 if is_human else 1
                 if is_valid_text(text):
                     records.append({"text": text, "label": label})
+                    if len(records) >= MAX_RECORDS:
+                        print(f"  [CAP] Reached {MAX_RECORDS:,} records, stopping early")
+                        break
+            # Free the split from memory
+            import gc; gc.collect()
     except Exception as e:
         print(f"  [WARN] RAID processing error: {e}")
     return records
@@ -629,9 +637,17 @@ def main():
     print("  DATA PREPROCESSING PIPELINE")
     print("=" * 60)
 
+    import gc
+
     for name, info in DATASETS.items():
         raw_path = RAW_DIR / name
         data_type = info["type"]
+
+        # Skip if already preprocessed
+        split_path = SPLITS_DIR / name
+        if all((split_path / f"{s}.jsonl").exists() for s in ["train", "val", "test"]):
+            print(f"\n  [SKIP] {name} — already preprocessed")
+            continue
 
         print(f"\n{'─' * 40}")
         print(f"Processing: {name} ({info['description']})")
@@ -648,24 +664,33 @@ def main():
             print(f"  [SKIP] No processor defined for {name}. Manual processing needed.")
             continue
 
-        # Process
-        records = processor(raw_path)
-        print(f"  Raw records: {len(records):,}")
+        try:
+            # Process
+            records = processor(raw_path)
+            print(f"  Raw records: {len(records):,}")
 
-        # Deduplicate
-        dedup_key = "text" if data_type == "classification" else "input" if data_type == "paraphrase" else "text_a"
-        records = deduplicate(records, key=dedup_key)
-        print(f"  After dedup: {len(records):,}")
+            # Deduplicate
+            dedup_key = "text" if data_type == "classification" else "input" if data_type == "paraphrase" else "text_a"
+            records = deduplicate(records, key=dedup_key)
+            print(f"  After dedup: {len(records):,}")
 
-        # Save processed
-        processed_path = PROCESSED_DIR / f"{name}.jsonl"
-        with open(processed_path, "w", encoding="utf-8") as f:
-            for r in records:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
-        print(f"  Saved processed: {processed_path}")
+            # Save processed
+            processed_path = PROCESSED_DIR / f"{name}.jsonl"
+            with open(processed_path, "w", encoding="utf-8") as f:
+                for r in records:
+                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            print(f"  Saved processed: {processed_path}")
 
-        # Create splits
-        create_splits(records, name, data_type)
+            # Create splits
+            create_splits(records, name, data_type)
+
+        except Exception as e:
+            print(f"  [ERROR] {name} failed: {e}")
+            print(f"  Continuing with next dataset...")
+
+        # Free memory between datasets
+        del records if 'records' in dir() else None
+        gc.collect()
 
     print(f"\n{'=' * 60}")
     print("  Preprocessing complete.")
