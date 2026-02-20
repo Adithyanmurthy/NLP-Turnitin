@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Person 1 — Shared Data Loading Utility
 Used by Person 1, 2, 3, and 4 to load preprocessed datasets.

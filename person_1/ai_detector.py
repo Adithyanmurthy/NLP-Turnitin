@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Person 1 — AI Detector Module
 The main deliverable. Provides: detect(text) → float (0.0 = human, 1.0 = AI)

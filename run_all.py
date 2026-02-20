@@ -60,7 +60,8 @@ def check_person1_data():
     raw_dir = ROOT_DIR / "person_1" / "data" / "raw"
 
     # Key datasets that Person 1 training needs
-    critical_datasets = ["raid", "hc3", "m4", "gpt2_output", "faidset"]
+    # m4 is manual-download only and not available — skip it
+    critical_datasets = ["raid", "hc3", "gpt2_output", "faidset"]
     downloaded = []
     missing_raw = []
     missing_splits = []

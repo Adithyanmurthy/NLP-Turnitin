@@ -127,7 +127,7 @@ MODELS = {
         "epochs": 3,
         "warmup_ratio": 0.1,
         "weight_decay": 0.01,
-        "datasets": ["raid", "hc3", "m4", "faidset"],
+        "datasets": ["raid", "hc3", "faidset"],
     },
     "roberta": {
         "name": "roberta-large",
@@ -160,7 +160,7 @@ MODELS = {
         "epochs": 3,
         "warmup_ratio": 0.1,
         "weight_decay": 0.01,
-        "datasets": ["m4", "faidset"],
+        "datasets": ["faidset"],
     },
 }
 

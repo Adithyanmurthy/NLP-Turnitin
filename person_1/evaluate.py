@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Person 1 — Full Evaluation Script
 Evaluates the complete AI detection ensemble on held-out test sets.
