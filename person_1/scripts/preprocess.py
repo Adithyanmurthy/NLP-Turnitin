@@ -689,7 +689,10 @@ def main():
             print(f"  Continuing with next dataset...")
 
         # Free memory between datasets
-        del records if 'records' in dir() else None
+        try:
+            del records
+        except NameError:
+            pass
         gc.collect()
 
     print(f"\n{'=' * 60}")
