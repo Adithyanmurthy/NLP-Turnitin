@@ -209,9 +209,9 @@ def main():
             print(f"  ✓ {m}")
     if missing_models:
         for m in missing_models:
-            print(f"  ✗ {m} — NOT cached")
-        print(f"  → Run: python setup_all.py")
-        all_ok = False
+            print(f"  ⚠ {m} — not in cache (will download during training)")
+        # Don't block training — models will auto-download when needed
+        # all_ok = False
 
     # ─── DECISION ────────────────────────────────────────
     print("\n" + "=" * 70)
