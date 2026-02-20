@@ -55,7 +55,7 @@ def main():
     detector = AIDetector()
 
     # Evaluate on each dataset's test split
-    test_datasets = ["raid", "hc3", "m4", "gpt2_output"]
+    test_datasets = ["raid", "hc3", "gpt2_output", "faidset"]
     all_results = []
 
     for ds_name in test_datasets:

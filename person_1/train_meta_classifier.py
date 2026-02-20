@@ -86,10 +86,10 @@ def main():
     # Load validation data (use val set to train meta-classifier, test set for final eval)
     print("\nLoading data for meta-classifier training...")
     val_records = loader.load_combined(
-        ["raid", "hc3", "m4"], split="val", max_per_dataset=10_000
+        ["raid", "hc3", "gpt2_output", "faidset"], split="val", max_per_dataset=5_000
     )
     test_records = loader.load_combined(
-        ["raid", "hc3", "m4"], split="test", max_per_dataset=10_000
+        ["raid", "hc3", "gpt2_output", "faidset"], split="test", max_per_dataset=5_000
     )
 
     val_texts = [r["text"] for r in val_records]

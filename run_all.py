@@ -272,13 +272,20 @@ def main():
     p2_data = ROOT_DIR / "person_2" / "data"
     p2_index = ROOT_DIR / "person_2" / "reference_index"
     if not (p2_index / "metadata.json").exists():
-        if p2_data.exists() and any(p2_data.iterdir()):
-            run_command(
-                str(ROOT_DIR / "person_2" / "scripts" / "build_index.py")
-                + f" --corpus_path {p2_data} --output_path {p2_index}",
-                "P2: Build MinHash/LSH Reference Index",
-                cwd=p2_dir,
-            )
+        # Check if there are actual corpus files (not just .gitkeep)
+        corpus_files = [f for f in p2_data.iterdir() if f.is_file() and f.name != ".gitkeep"] if p2_data.exists() else []
+        if corpus_files:
+            print("\n  [INFO] Building reference index from corpus data...")
+            try:
+                subprocess.run(
+                    [sys.executable, "scripts/build_index.py",
+                     "--corpus_path", str(p2_data),
+                     "--output_path", str(p2_index)],
+                    check=True, capture_output=False, cwd=p2_dir,
+                )
+                print("  ✓ Reference index built")
+            except subprocess.CalledProcessError:
+                print("  ⚠ Reference index build failed — continuing without it")
         else:
             print("\n  [SKIP] No corpus data in person_2/data/ — skipping index build")
     else:

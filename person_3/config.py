@@ -75,7 +75,7 @@ MODELS = {
         "hf_path": "google/flan-t5-xl",
         "type": "seq2seq",
         "params": "3B",
-        "batch_size": 4,
+        "batch_size": 1,
         "max_length": 512,
         "learning_rate": 1e-4,
         "epochs": 3
