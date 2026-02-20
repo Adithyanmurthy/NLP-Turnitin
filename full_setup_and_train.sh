@@ -6,11 +6,10 @@
 # ============================================================
 set -e  # Exit on error
 
-export HF_HOME=/home/jovyan/hf_cache
+REPO_DIR="/home/jovyan/NLP-Turnitin"
+export HF_HOME="$REPO_DIR/hf_cache"
 export WANDB_MODE=offline
 export TOKENIZERS_PARALLELISM=false
-
-REPO_DIR="/home/jovyan/NLP-Turnitin"
 LOG_PREFIX="[SETUP]"
 
 log() {
