@@ -116,6 +116,11 @@ def train_classifier(
         optimizer, num_warmup_steps=warmup_steps, num_training_steps=total_steps
     )
 
+    # FP16 mixed precision — halves GPU memory usage
+    use_fp16 = device.type == "cuda"
+    scaler = torch.cuda.amp.GradScaler(enabled=use_fp16)
+    print(f"Mixed precision (fp16): {use_fp16}")
+
     # Training loop
     best_val_f1 = 0.0
     best_metrics = {}
@@ -130,14 +135,17 @@ def train_classifier(
         pbar = tqdm(train_dataloader, desc=f"Epoch {epoch + 1}/{num_epochs} [Train]")
         for step, batch in enumerate(pbar):
             batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
-            loss = outputs.loss / gradient_accumulation_steps
-            loss.backward()
+            with torch.cuda.amp.autocast(enabled=use_fp16):
+                outputs = model(**batch)
+                loss = outputs.loss / gradient_accumulation_steps
+            scaler.scale(loss).backward()
             total_loss += loss.item()
 
             if (step + 1) % gradient_accumulation_steps == 0:
+                scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
+                scaler.step(optimizer)
+                scaler.update()
                 scheduler.step()
                 optimizer.zero_grad()
 
@@ -174,11 +182,13 @@ def evaluate_classifier(
     model.eval()
     all_preds = []
     all_labels = []
+    use_fp16 = device.type == "cuda"
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
+            with torch.cuda.amp.autocast(enabled=use_fp16):
+                outputs = model(**batch)
             logits = outputs.logits
             probs = torch.softmax(logits, dim=-1)[:, 1].cpu().numpy()
             labels = batch["labels"].cpu().numpy()
