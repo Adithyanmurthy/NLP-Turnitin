@@ -105,7 +105,7 @@ def train_cross_encoder(
     """
     # Load model
     print(f"Loading base model: {base_model}")
-    model = CrossEncoder(base_model, num_labels=2)
+    model = CrossEncoder(base_model, num_labels=2, automodel_args={"ignore_mismatched_sizes": True})
     
     # Load datasets
     train_examples = []

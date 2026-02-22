@@ -34,6 +34,21 @@ def train_mistral():
     
     # Load model and tokenizer
     print(f"\n[2/6] Loading model: {model_name}")
+    
+    # Delete corrupted cache files if they exist
+    try:
+        from huggingface_hub import scan_cache_dir
+        cache_info = scan_cache_dir()
+        for repo in cache_info.repos:
+            if model_name in repo.repo_id:
+                for revision in repo.revisions:
+                    for f in revision.files:
+                        if "model-00002" in str(f.file_path):
+                            print(f"  Deleting corrupted cache: {f.file_path}")
+                            f.file_path.unlink(missing_ok=True)
+    except Exception:
+        pass
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
@@ -43,7 +58,8 @@ def train_mistral():
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
-        force_download=True,  # Re-download corrupted weights
+        force_download=True,
+        resume_download=False,
     )
     
     # Prepare model for training

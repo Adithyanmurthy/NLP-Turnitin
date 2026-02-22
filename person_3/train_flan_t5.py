@@ -7,7 +7,8 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     Trainer,
     TrainingArguments,
-    DataCollatorForSeq2Seq
+    DataCollatorForSeq2Seq,
+    BitsAndBytesConfig
 )
 from data_loader import get_dataloaders
 from config import MODELS, CHECKPOINTS_DIR, LOGS_DIR, TRAINING_CONFIG
@@ -22,14 +23,17 @@ def train_flan_t5():
     model_config = MODELS["flan_t5"]
     model_name = model_config["hf_path"]
     
-    # Load model and tokenizer
-    print(f"\n[1/5] Loading model: {model_name}")
+    # Load model in 8-bit to fit in 20GB VRAM
+    print(f"\n[1/5] Loading model: {model_name} (8-bit quantized)")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    
+    bnb_config = BitsAndBytesConfig(load_in_8bit=True)
     model = AutoModelForSeq2SeqLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float16 if TRAINING_CONFIG["fp16"] else torch.float32
+        quantization_config=bnb_config,
+        device_map="auto",
     )
-    # Enable gradient checkpointing to reduce VRAM usage (~40% savings)
+    # Enable gradient checkpointing to reduce VRAM usage
     model.gradient_checkpointing_enable()
     
     # Load data
@@ -63,7 +67,7 @@ def train_flan_t5():
         evaluation_strategy="steps",
         save_strategy="steps",
         load_best_model_at_end=True,
-        fp16=TRAINING_CONFIG["fp16"],
+        fp16=False,  # 8-bit quantization handles precision
         gradient_checkpointing=True,
         report_to="tensorboard",
         save_total_limit=2,
