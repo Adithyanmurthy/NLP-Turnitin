@@ -338,11 +338,8 @@ def main():
     else:
         print(f"\n  [SKIP] P3 Mistral-7B already trained")
 
-    # DIPPER (pretrained, just download and save to checkpoints)
-    if not checkpoint_exists("person_3", "dipper_xxl"):
-        run_command("setup_dipper.py", "P3: Setup DIPPER (11B paraphraser)", cwd=p3_dir)
-    else:
-        print(f"\n  [SKIP] P3 DIPPER already set up")
+    # DIPPER (11B — too large for 20GB VRAM, skip)
+    print(f"\n  [SKIP] P3 DIPPER — 11B params exceeds 20GB VRAM")
 
     # ═════════════════════════════════════════════════════
     #  DONE

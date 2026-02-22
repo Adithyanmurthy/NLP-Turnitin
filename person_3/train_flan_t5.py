@@ -29,6 +29,8 @@ def train_flan_t5():
         model_name,
         torch_dtype=torch.float16 if TRAINING_CONFIG["fp16"] else torch.float32
     )
+    # Enable gradient checkpointing to reduce VRAM usage (~40% savings)
+    model.gradient_checkpointing_enable()
     
     # Load data
     print(f"\n[2/5] Loading datasets...")
@@ -62,8 +64,9 @@ def train_flan_t5():
         save_strategy="steps",
         load_best_model_at_end=True,
         fp16=TRAINING_CONFIG["fp16"],
+        gradient_checkpointing=True,
         report_to="tensorboard",
-        save_total_limit=3,
+        save_total_limit=2,
         metric_for_best_model="eval_loss",
         greater_is_better=False
     )

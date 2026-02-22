@@ -174,7 +174,7 @@ if __name__ == "__main__":
                         help="Path to save trained model")
     parser.add_argument("--base_model", type=str, default="cross-encoder/nli-deberta-v3-large",
                         help="Base cross-encoder model")
-    parser.add_argument("--batch_size", type=int, default=16,
+    parser.add_argument("--batch_size", type=int, default=8,
                         help="Training batch size")
     parser.add_argument("--epochs", type=int, default=3,
                         help="Number of training epochs")

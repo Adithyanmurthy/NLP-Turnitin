@@ -42,7 +42,8 @@ def train_mistral():
         model_name,
         quantization_config=bnb_config,
         device_map="auto",
-        trust_remote_code=True
+        trust_remote_code=True,
+        force_download=True,  # Re-download corrupted weights
     )
     
     # Prepare model for training

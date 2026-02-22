@@ -106,7 +106,9 @@ class AIDetector:
             return
 
         self.tokenizers[name] = AutoTokenizer.from_pretrained(ckpt_path)
-        self.models[name] = AutoModelForSequenceClassification.from_pretrained(ckpt_path)
+        self.models[name] = AutoModelForSequenceClassification.from_pretrained(
+            ckpt_path, ignore_mismatched_sizes=True
+        )
         self.models[name].to(self.device)
         self.models[name].eval()
         print(f"  Loaded {name} from {ckpt_path}")
@@ -133,7 +135,14 @@ class AIDetector:
 
         with torch.no_grad():
             outputs = model(**encoding)
-            prob = torch.softmax(outputs.logits, dim=-1)[0, 1].item()
+            logits = outputs.logits
+            # Handle models with 2 or 3+ labels — always return AI probability
+            if logits.shape[-1] == 2:
+                prob = torch.softmax(logits, dim=-1)[0, 1].item()
+            else:
+                # For 3+ labels (e.g. FAIDSet: human/AI/mixed), sum non-human probs
+                probs = torch.softmax(logits, dim=-1)[0]
+                prob = 1.0 - probs[0].item()  # label 0 = human
 
         return prob
 
@@ -162,7 +171,12 @@ class AIDetector:
 
             with torch.no_grad():
                 outputs = model(**encoding)
-                probs = torch.softmax(outputs.logits, dim=-1)[:, 1].cpu().numpy()
+                logits = outputs.logits
+                if logits.shape[-1] == 2:
+                    probs = torch.softmax(logits, dim=-1)[:, 1].cpu().numpy()
+                else:
+                    all_probs_tensor = torch.softmax(logits, dim=-1)
+                    probs = (1.0 - all_probs_tensor[:, 0]).cpu().numpy()
             all_probs.extend(probs)
 
         return np.array(all_probs)

@@ -85,7 +85,7 @@ MODELS = {
         "hf_path": "google/pegasus-large",
         "type": "seq2seq",
         "params": "568M",
-        "batch_size": 4,
+        "batch_size": 2,
         "max_length": 512,
         "learning_rate": 1e-4,
         "epochs": 3
