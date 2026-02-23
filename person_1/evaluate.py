@@ -68,7 +68,8 @@ def main():
                 random.seed(42)
                 records = random.sample(records, 50_000)
 
-            metrics = evaluate_on_dataset(detector, records, ds_name)
+            # Small batch size to avoid OOM on Longformer (4096 tokens)
+            metrics = evaluate_on_dataset(detector, records, ds_name, batch_size=4)
             all_results.append(metrics)
 
             print(f"  Samples:    {metrics['n_samples']:,}")
@@ -90,7 +91,7 @@ def main():
         )
         if combined_records:
             combined_metrics = evaluate_on_dataset(
-                detector, combined_records, "combined"
+                detector, combined_records, "combined", batch_size=4
             )
             all_results.append(combined_metrics)
             print(f"  Combined Accuracy: {combined_metrics['accuracy']:.4f}")

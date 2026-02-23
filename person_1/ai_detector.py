@@ -157,6 +157,10 @@ class AIDetector:
         tokenizer = self.tokenizers[name]
         model = self.models[name]
 
+        # Longformer uses 4096 tokens — needs much smaller batch to avoid OOM
+        if cfg["max_length"] > 1024:
+            batch_size = min(batch_size, 2)
+
         all_probs = []
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
