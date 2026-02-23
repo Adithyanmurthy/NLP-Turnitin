@@ -1,139 +1,215 @@
 """
 Training script for Cross-Encoder (RoBERTa-large based)
 Fine-tunes on PAWS + MRPC + STS for pairwise similarity verification.
-Uses num_labels=1 (regression/sigmoid) to avoid size mismatch with pretrained checkpoints.
+Uses manual model loading with use_fast=False to avoid tokenizer parsing bugs
+on older tokenizers library versions (Python 3.8 / tokenizers 0.15.x).
 """
 
 import os
+import sys
 import argparse
-from sentence_transformers import CrossEncoder, InputExample
-from sentence_transformers.cross_encoder.evaluation import CEBinaryClassificationEvaluator
-from torch.utils.data import DataLoader
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from datasets import load_dataset
+from tqdm import tqdm
 
 
-def load_paws_for_cross_encoder():
-    """Load PAWS dataset for cross-encoder training."""
-    print("Loading PAWS...")
-    dataset = load_dataset("paws", "labeled_final")
-    train_examples = [
-        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
-        for item in dataset['train']
-    ]
-    val_examples = [
-        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
-        for item in dataset['validation']
-    ]
-    return train_examples, val_examples
+class PairDataset(Dataset):
+    """Simple dataset for sentence pairs."""
+    def __init__(self, encodings, labels):
+        self.encodings = encodings
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        item = {k: v[idx] for k, v in self.encodings.items()}
+        item['labels'] = torch.tensor(self.labels[idx], dtype=torch.float)
+        return item
 
 
-def load_mrpc_for_cross_encoder():
-    """Load MRPC dataset for cross-encoder training."""
-    print("Loading MRPC...")
-    dataset = load_dataset("glue", "mrpc")
-    train_examples = [
-        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
-        for item in dataset['train']
-    ]
-    val_examples = [
-        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
-        for item in dataset['validation']
-    ]
-    return train_examples, val_examples
+def load_all_data(use_paws=True, use_mrpc=True, use_sts=True):
+    """Load and combine all datasets, return (train_pairs, val_pairs)."""
+    train_pairs, val_pairs = [], []
+
+    if use_paws:
+        print("Loading PAWS...")
+        ds = load_dataset("paws", "labeled_final")
+        for item in ds['train']:
+            train_pairs.append((item['sentence1'], item['sentence2'], float(item['label'])))
+        for item in ds['validation']:
+            val_pairs.append((item['sentence1'], item['sentence2'], float(item['label'])))
+        print(f"  PAWS: {len(ds['train'])} train, {len(ds['validation'])} val")
+
+    if use_mrpc:
+        print("Loading MRPC...")
+        ds = load_dataset("glue", "mrpc")
+        for item in ds['train']:
+            train_pairs.append((item['sentence1'], item['sentence2'], float(item['label'])))
+        for item in ds['validation']:
+            val_pairs.append((item['sentence1'], item['sentence2'], float(item['label'])))
+        print(f"  MRPC: {len(ds['train'])} train, {len(ds['validation'])} val")
+
+    if use_sts:
+        print("Loading STS Benchmark...")
+        ds = load_dataset("mteb/stsbenchmark-sts")
+        for item in ds['train']:
+            label = 1.0 if item['score'] >= 3.0 else 0.0
+            train_pairs.append((item['sentence1'], item['sentence2'], label))
+        for item in ds['validation']:
+            label = 1.0 if item['score'] >= 3.0 else 0.0
+            val_pairs.append((item['sentence1'], item['sentence2'], label))
+        print(f"  STS: {len(ds['train'])} train, {len(ds['validation'])} val")
+
+    print(f"\nTotal: {len(train_pairs)} train, {len(val_pairs)} val")
+    return train_pairs, val_pairs
 
 
-def load_sts_for_cross_encoder():
-    """Load STS Benchmark for cross-encoder training."""
-    print("Loading STS Benchmark...")
-    dataset = load_dataset("mteb/stsbenchmark-sts")
-    train_examples = [
-        InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=1.0 if item['score'] >= 3.0 else 0.0
-        )
-        for item in dataset['train']
-    ]
-    val_examples = [
-        InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=1.0 if item['score'] >= 3.0 else 0.0
-        )
-        for item in dataset['validation']
-    ]
-    return train_examples, val_examples
+def encode_pairs(tokenizer, pairs, max_length=512):
+    """Tokenize sentence pairs."""
+    texts_a = [p[0] for p in pairs]
+    texts_b = [p[1] for p in pairs]
+    labels = [p[2] for p in pairs]
+    encodings = tokenizer(texts_a, texts_b, truncation=True, padding=True,
+                          max_length=max_length, return_tensors='pt')
+    return encodings, labels
+
+
+def evaluate(model, dataloader, device):
+    """Evaluate model on validation set."""
+    model.eval()
+    all_preds, all_labels = [], []
+    with torch.no_grad():
+        for batch in dataloader:
+            batch = {k: v.to(device) for k, v in batch.items()}
+            labels = batch.pop('labels')
+            outputs = model(**batch)
+            # Single output neuron — squeeze and sigmoid
+            logits = outputs.logits.squeeze(-1)
+            preds = torch.sigmoid(logits).cpu().numpy()
+            all_preds.extend(preds)
+            all_labels.extend(labels.cpu().numpy())
+
+    all_preds = np.array(all_preds)
+    all_labels = np.array(all_labels)
+    pred_binary = (all_preds >= 0.5).astype(int)
+    label_binary = all_labels.astype(int)
+
+    acc = accuracy_score(label_binary, pred_binary)
+    f1 = f1_score(label_binary, pred_binary, zero_division=0)
+    try:
+        auc = roc_auc_score(label_binary, all_preds)
+    except ValueError:
+        auc = 0.0
+    return acc, f1, auc
 
 
 def train_cross_encoder(
-    output_path: str,
-    base_model: str = "cross-encoder/quora-roberta-large",
-    batch_size: int = 8,
-    epochs: int = 3,
-    warmup_steps: int = 500,
-    use_paws: bool = True,
-    use_mrpc: bool = True,
-    use_sts: bool = True
+    output_path="../checkpoints/cross_encoder",
+    base_model="roberta-large",
+    batch_size=8,
+    epochs=3,
+    warmup_steps=500,
+    use_paws=True,
+    use_mrpc=True,
+    use_sts=True
 ):
-    """Train Cross-Encoder model using num_labels=1 (sigmoid regression)."""
-    # num_labels=1 matches the pretrained checkpoint shape — no size mismatch
-    # With 1 label, CrossEncoder uses sigmoid: output in [0,1], perfect for binary similarity
-    print(f"Loading base model: {base_model} (num_labels=1, sigmoid mode)")
-    model = CrossEncoder(base_model, num_labels=1)
+    """
+    Train Cross-Encoder using manual training loop.
+    Uses roberta-large directly (not a cross-encoder/* model) to avoid
+    tokenizer parsing issues on older tokenizers library.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
 
-    # Load datasets
-    train_examples, val_examples = [], []
-
-    if use_paws:
-        t, v = load_paws_for_cross_encoder()
-        train_examples.extend(t)
-        val_examples.extend(v)
-        print(f"  PAWS: {len(t)} train, {len(v)} val")
-
-    if use_mrpc:
-        t, v = load_mrpc_for_cross_encoder()
-        train_examples.extend(t)
-        val_examples.extend(v)
-        print(f"  MRPC: {len(t)} train, {len(v)} val")
-
-    if use_sts:
-        t, v = load_sts_for_cross_encoder()
-        train_examples.extend(t)
-        val_examples.extend(v)
-        print(f"  STS:  {len(t)} train, {len(v)} val")
-
-    print(f"\nTotal: {len(train_examples)} train, {len(val_examples)} val")
-
-    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=batch_size)
-    evaluator = CEBinaryClassificationEvaluator.from_input_examples(val_examples, name='validation')
-
-    print(f"\nTraining: batch_size={batch_size}, epochs={epochs}, warmup={warmup_steps}")
-    print(f"Output: {output_path}\n")
-
-    model.fit(
-        train_dataloader=train_dataloader,
-        evaluator=evaluator,
-        epochs=epochs,
-        warmup_steps=warmup_steps,
-        output_path=output_path,
-        evaluation_steps=1000,
-        save_best_model=True,
-        show_progress_bar=True
+    # Load tokenizer with use_fast=False to avoid tokenizers library bugs
+    print(f"Loading model: {base_model}")
+    tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=False)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        base_model, num_labels=1, ignore_mismatched_sizes=True
     )
+    model.to(device)
 
-    print(f"\nTraining complete! Model saved to {output_path}")
+    # Load data
+    train_pairs, val_pairs = load_all_data(use_paws, use_mrpc, use_sts)
+
+    # Encode
+    print("Tokenizing...")
+    train_enc, train_labels = encode_pairs(tokenizer, train_pairs)
+    val_enc, val_labels = encode_pairs(tokenizer, val_pairs)
+
+    train_dataset = PairDataset(train_enc, train_labels)
+    val_dataset = PairDataset(val_enc, val_labels)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+
+    # Optimizer and scheduler
+    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5, weight_decay=0.01)
+    total_steps = len(train_loader) * epochs
+    scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+
+    # FP16
+    use_fp16 = device.type == "cuda"
+    scaler = torch.cuda.amp.GradScaler(enabled=use_fp16)
+
+    best_f1 = 0.0
+    os.makedirs(output_path, exist_ok=True)
+
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}")
+        for batch in pbar:
+            batch = {k: v.to(device) for k, v in batch.items()}
+            labels = batch.pop('labels')
+            optimizer.zero_grad()
+
+            with torch.cuda.amp.autocast(enabled=use_fp16):
+                outputs = model(**batch)
+                logits = outputs.logits.squeeze(-1)
+                loss = loss_fn(logits, labels)
+
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            scaler.step(optimizer)
+            scaler.update()
+            scheduler.step()
+
+            total_loss += loss.item()
+            pbar.set_postfix({"loss": f"{total_loss / (pbar.n + 1):.4f}"})
+
+        # Evaluate
+        acc, f1, auc = evaluate(model, val_loader, device)
+        print(f"  Epoch {epoch+1}: acc={acc:.4f}, f1={f1:.4f}, auc={auc:.4f}")
+
+        if f1 > best_f1:
+            best_f1 = f1
+            model.save_pretrained(output_path)
+            tokenizer.save_pretrained(output_path)
+            print(f"  -> Saved best model (F1={best_f1:.4f})")
+
+    print(f"\nTraining complete! Best F1={best_f1:.4f}, saved to {output_path}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train Cross-Encoder for plagiarism verification")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--output_path", type=str, default="../checkpoints/cross_encoder")
-    parser.add_argument("--base_model", type=str, default="cross-encoder/quora-roberta-large")
+    parser.add_argument("--base_model", type=str, default="roberta-large")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--warmup_steps", type=int, default=500)
     parser.add_argument("--no_paws", action="store_true")
     parser.add_argument("--no_mrpc", action="store_true")
     parser.add_argument("--no_sts", action="store_true")
-
     args = parser.parse_args()
+
     train_cross_encoder(
         output_path=args.output_path,
         base_model=args.base_model,
