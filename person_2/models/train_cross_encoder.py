@@ -82,7 +82,7 @@ def load_sts_for_cross_encoder():
 
 def train_cross_encoder(
     output_path: str,
-    base_model: str = "cross-encoder/stsb-roberta-large",
+    base_model: str = "cross-encoder/quora-roberta-large",
     batch_size: int = 16,
     epochs: int = 3,
     warmup_steps: int = 500,
@@ -95,7 +95,7 @@ def train_cross_encoder(
     
     Args:
         output_path: Path to save trained model
-        base_model: Base cross-encoder model (default: RoBERTa-large based)
+        base_model: Base cross-encoder model (default: quora-roberta-large, 2 labels)
         batch_size: Training batch size
         epochs: Number of training epochs
         warmup_steps: Number of warmup steps
@@ -103,9 +103,9 @@ def train_cross_encoder(
         use_mrpc: Include MRPC
         use_sts: Include STS
     """
-    # Load model
+    # Load model — quora-roberta-large already has 2 labels, no size mismatch
     print(f"Loading base model: {base_model}")
-    model = CrossEncoder(base_model, num_labels=2, automodel_args={"ignore_mismatched_sizes": True})
+    model = CrossEncoder(base_model, num_labels=2)
     
     # Load datasets
     train_examples = []
@@ -172,8 +172,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Cross-Encoder for plagiarism verification")
     parser.add_argument("--output_path", type=str, default="../checkpoints/cross_encoder",
                         help="Path to save trained model")
-    parser.add_argument("--base_model", type=str, default="cross-encoder/stsb-roberta-large",
-                        help="Base cross-encoder model (RoBERTa-large based)")
+    parser.add_argument("--base_model", type=str, default="cross-encoder/quora-roberta-large",
+                        help="Base cross-encoder model (2-label, RoBERTa-large)")
     parser.add_argument("--batch_size", type=int, default=8,
                         help="Training batch size")
     parser.add_argument("--epochs", type=int, default=3,
