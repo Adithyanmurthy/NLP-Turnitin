@@ -28,7 +28,7 @@ class PairDataset(Dataset):
 
     def __getitem__(self, idx):
         item = {k: v[idx] for k, v in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx], dtype=torch.float)
+        item['labels'] = torch.tensor(int(self.labels[idx]), dtype=torch.long)
         return item
 
 
@@ -88,10 +88,9 @@ def evaluate(model, dataloader, device):
             batch = {k: v.to(device) for k, v in batch.items()}
             labels = batch.pop('labels')
             outputs = model(**batch)
-            # Single output neuron — squeeze and sigmoid
-            logits = outputs.logits.squeeze(-1)
-            preds = torch.sigmoid(logits).cpu().numpy()
-            all_preds.extend(preds)
+            # 2-class output — use softmax on class 1 (similar)
+            probs = torch.softmax(outputs.logits, dim=-1)[:, 1].cpu().numpy()
+            all_preds.extend(probs)
             all_labels.extend(labels.cpu().numpy())
 
     all_preds = np.array(all_preds)
@@ -109,7 +108,7 @@ def evaluate(model, dataloader, device):
 
 
 def train_cross_encoder(
-    output_path="../checkpoints/cross_encoder",
+    output_path=None,
     base_model="roberta-large",
     batch_size=8,
     epochs=3,
@@ -120,9 +119,14 @@ def train_cross_encoder(
 ):
     """
     Train Cross-Encoder using manual training loop.
-    Uses roberta-large directly (not a cross-encoder/* model) to avoid
-    tokenizer parsing issues on older tokenizers library.
+    Uses roberta-large directly with use_fast=False tokenizer.
+    num_labels=2 with CrossEntropyLoss for proper binary classification.
     """
+    # Default output path: person_2/checkpoints/cross_encoder
+    if output_path is None:
+        output_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                   "checkpoints", "cross_encoder")
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
@@ -130,7 +134,7 @@ def train_cross_encoder(
     print(f"Loading model: {base_model}")
     tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=False)
     model = AutoModelForSequenceClassification.from_pretrained(
-        base_model, num_labels=1, ignore_mismatched_sizes=True
+        base_model, num_labels=2, ignore_mismatched_sizes=True
     )
     model.to(device)
 
@@ -148,11 +152,16 @@ def train_cross_encoder(
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
-    # Optimizer and scheduler
-    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5, weight_decay=0.01)
+    # Differential learning rate: higher for classifier head, lower for backbone
+    classifier_params = [p for n, p in model.named_parameters() if 'classifier' in n]
+    backbone_params = [p for n, p in model.named_parameters() if 'classifier' not in n]
+    optimizer = torch.optim.AdamW([
+        {'params': backbone_params, 'lr': 2e-5},
+        {'params': classifier_params, 'lr': 1e-3},  # 50x higher for new head
+    ], weight_decay=0.01)
+
     total_steps = len(train_loader) * epochs
     scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, total_steps)
-    loss_fn = torch.nn.BCEWithLogitsLoss()
 
     # FP16
     use_fp16 = device.type == "cuda"
@@ -172,8 +181,8 @@ def train_cross_encoder(
 
             with torch.cuda.amp.autocast(enabled=use_fp16):
                 outputs = model(**batch)
-                logits = outputs.logits.squeeze(-1)
-                loss = loss_fn(logits, labels)
+                loss = outputs.loss if outputs.loss is not None else \
+                    torch.nn.CrossEntropyLoss()(outputs.logits, labels)
 
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
@@ -200,7 +209,7 @@ def train_cross_encoder(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output_path", type=str, default="../checkpoints/cross_encoder")
+    parser.add_argument("--output_path", type=str, default=None)
     parser.add_argument("--base_model", type=str, default="roberta-large")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=3)
