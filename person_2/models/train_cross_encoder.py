@@ -1,12 +1,13 @@
 """
-Training script for DeBERTa-v3 Cross-Encoder
-Fine-tunes on PAWS + MRPC + STS for pairwise similarity verification
+Training script for Cross-Encoder (RoBERTa-large based)
+Fine-tunes on PAWS + MRPC + STS for pairwise similarity verification.
+Uses num_labels=1 (regression/sigmoid) to avoid size mismatch with pretrained checkpoints.
 """
 
 import os
 import argparse
 from sentence_transformers import CrossEncoder, InputExample
-from sentence_transformers.cross_encoder.evaluation import CEBinaryClassificationEvaluator, CESoftmaxAccuracyEvaluator
+from sentence_transformers.cross_encoder.evaluation import CEBinaryClassificationEvaluator
 from torch.utils.data import DataLoader
 from datasets import load_dataset
 
@@ -15,21 +16,14 @@ def load_paws_for_cross_encoder():
     """Load PAWS dataset for cross-encoder training."""
     print("Loading PAWS...")
     dataset = load_dataset("paws", "labeled_final")
-    
-    train_examples = []
-    for item in dataset['train']:
-        train_examples.append(InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=int(item['label'])
-        ))
-    
-    val_examples = []
-    for item in dataset['validation']:
-        val_examples.append(InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=int(item['label'])
-        ))
-    
+    train_examples = [
+        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
+        for item in dataset['train']
+    ]
+    val_examples = [
+        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
+        for item in dataset['validation']
+    ]
     return train_examples, val_examples
 
 
@@ -37,21 +31,14 @@ def load_mrpc_for_cross_encoder():
     """Load MRPC dataset for cross-encoder training."""
     print("Loading MRPC...")
     dataset = load_dataset("glue", "mrpc")
-    
-    train_examples = []
-    for item in dataset['train']:
-        train_examples.append(InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=int(item['label'])
-        ))
-    
-    val_examples = []
-    for item in dataset['validation']:
-        val_examples.append(InputExample(
-            texts=[item['sentence1'], item['sentence2']],
-            label=int(item['label'])
-        ))
-    
+    train_examples = [
+        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
+        for item in dataset['train']
+    ]
+    val_examples = [
+        InputExample(texts=[item['sentence1'], item['sentence2']], label=float(item['label']))
+        for item in dataset['validation']
+    ]
     return train_examples, val_examples
 
 
@@ -59,101 +46,68 @@ def load_sts_for_cross_encoder():
     """Load STS Benchmark for cross-encoder training."""
     print("Loading STS Benchmark...")
     dataset = load_dataset("mteb/stsbenchmark-sts")
-    
-    train_examples = []
-    for item in dataset['train']:
-        # Convert to binary: score >= 3.0 means similar
-        label = 1 if item['score'] >= 3.0 else 0
-        train_examples.append(InputExample(
+    train_examples = [
+        InputExample(
             texts=[item['sentence1'], item['sentence2']],
-            label=label
-        ))
-    
-    val_examples = []
-    for item in dataset['validation']:
-        label = 1 if item['score'] >= 3.0 else 0
-        val_examples.append(InputExample(
+            label=1.0 if item['score'] >= 3.0 else 0.0
+        )
+        for item in dataset['train']
+    ]
+    val_examples = [
+        InputExample(
             texts=[item['sentence1'], item['sentence2']],
-            label=label
-        ))
-    
+            label=1.0 if item['score'] >= 3.0 else 0.0
+        )
+        for item in dataset['validation']
+    ]
     return train_examples, val_examples
 
 
 def train_cross_encoder(
     output_path: str,
     base_model: str = "cross-encoder/quora-roberta-large",
-    batch_size: int = 16,
+    batch_size: int = 8,
     epochs: int = 3,
     warmup_steps: int = 500,
     use_paws: bool = True,
     use_mrpc: bool = True,
     use_sts: bool = True
 ):
-    """
-    Train Cross-Encoder model.
-    
-    Args:
-        output_path: Path to save trained model
-        base_model: Base cross-encoder model (default: quora-roberta-large, 2 labels)
-        batch_size: Training batch size
-        epochs: Number of training epochs
-        warmup_steps: Number of warmup steps
-        use_paws: Include PAWS
-        use_mrpc: Include MRPC
-        use_sts: Include STS
-    """
-    # Load model — quora-roberta-large already has 2 labels, no size mismatch
-    print(f"Loading base model: {base_model}")
-    model = CrossEncoder(base_model, num_labels=2)
-    
+    """Train Cross-Encoder model using num_labels=1 (sigmoid regression)."""
+    # num_labels=1 matches the pretrained checkpoint shape — no size mismatch
+    # With 1 label, CrossEncoder uses sigmoid: output in [0,1], perfect for binary similarity
+    print(f"Loading base model: {base_model} (num_labels=1, sigmoid mode)")
+    model = CrossEncoder(base_model, num_labels=1)
+
     # Load datasets
-    train_examples = []
-    val_examples = []
-    
+    train_examples, val_examples = [], []
+
     if use_paws:
-        paws_train, paws_val = load_paws_for_cross_encoder()
-        train_examples.extend(paws_train)
-        val_examples.extend(paws_val)
-        print(f"Added {len(paws_train)} PAWS training examples")
-    
+        t, v = load_paws_for_cross_encoder()
+        train_examples.extend(t)
+        val_examples.extend(v)
+        print(f"  PAWS: {len(t)} train, {len(v)} val")
+
     if use_mrpc:
-        mrpc_train, mrpc_val = load_mrpc_for_cross_encoder()
-        train_examples.extend(mrpc_train)
-        val_examples.extend(mrpc_val)
-        print(f"Added {len(mrpc_train)} MRPC training examples")
-    
+        t, v = load_mrpc_for_cross_encoder()
+        train_examples.extend(t)
+        val_examples.extend(v)
+        print(f"  MRPC: {len(t)} train, {len(v)} val")
+
     if use_sts:
-        sts_train, sts_val = load_sts_for_cross_encoder()
-        train_examples.extend(sts_train)
-        val_examples.extend(sts_val)
-        print(f"Added {len(sts_train)} STS training examples")
-    
-    print(f"\nTotal training examples: {len(train_examples)}")
-    print(f"Total validation examples: {len(val_examples)}")
-    
-    # Create DataLoader
-    train_dataloader = DataLoader(
-        train_examples,
-        shuffle=True,
-        batch_size=batch_size
-    )
-    
-    # Create evaluator
-    evaluator = CEBinaryClassificationEvaluator.from_input_examples(
-        val_examples,
-        name='validation'
-    )
-    
-    # Training configuration
-    print(f"\nTraining configuration:")
-    print(f"  Batch size: {batch_size}")
-    print(f"  Epochs: {epochs}")
-    print(f"  Warmup steps: {warmup_steps}")
-    print(f"  Output path: {output_path}")
-    
-    # Train
-    print("\nStarting training...")
+        t, v = load_sts_for_cross_encoder()
+        train_examples.extend(t)
+        val_examples.extend(v)
+        print(f"  STS:  {len(t)} train, {len(v)} val")
+
+    print(f"\nTotal: {len(train_examples)} train, {len(val_examples)} val")
+
+    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=batch_size)
+    evaluator = CEBinaryClassificationEvaluator.from_input_examples(val_examples, name='validation')
+
+    print(f"\nTraining: batch_size={batch_size}, epochs={epochs}, warmup={warmup_steps}")
+    print(f"Output: {output_path}\n")
+
     model.fit(
         train_dataloader=train_dataloader,
         evaluator=evaluator,
@@ -164,31 +118,22 @@ def train_cross_encoder(
         save_best_model=True,
         show_progress_bar=True
     )
-    
+
     print(f"\nTraining complete! Model saved to {output_path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Cross-Encoder for plagiarism verification")
-    parser.add_argument("--output_path", type=str, default="../checkpoints/cross_encoder",
-                        help="Path to save trained model")
-    parser.add_argument("--base_model", type=str, default="cross-encoder/quora-roberta-large",
-                        help="Base cross-encoder model (2-label, RoBERTa-large)")
-    parser.add_argument("--batch_size", type=int, default=8,
-                        help="Training batch size")
-    parser.add_argument("--epochs", type=int, default=3,
-                        help="Number of training epochs")
-    parser.add_argument("--warmup_steps", type=int, default=500,
-                        help="Number of warmup steps")
-    parser.add_argument("--no_paws", action="store_true",
-                        help="Exclude PAWS")
-    parser.add_argument("--no_mrpc", action="store_true",
-                        help="Exclude MRPC")
-    parser.add_argument("--no_sts", action="store_true",
-                        help="Exclude STS")
-    
+    parser.add_argument("--output_path", type=str, default="../checkpoints/cross_encoder")
+    parser.add_argument("--base_model", type=str, default="cross-encoder/quora-roberta-large")
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--warmup_steps", type=int, default=500)
+    parser.add_argument("--no_paws", action="store_true")
+    parser.add_argument("--no_mrpc", action="store_true")
+    parser.add_argument("--no_sts", action="store_true")
+
     args = parser.parse_args()
-    
     train_cross_encoder(
         output_path=args.output_path,
         base_model=args.base_model,
